@@ -1,0 +1,499 @@
+{
+  "lessons": [
+    {
+      "id": "1",
+      "lessonId": 1,
+      "phase": "beginner",
+      "dayNumber": 1,
+      "title": "Basic Greetings",
+      "description": "Learn standard English greetings like Hello, Good Morning, and how to respond politely.",
+      "steps": {
+        "learn": [
+          { "id": "l1", "word": "Hello", "meaning": "A common greeting used to start a conversation.", "example": "Hello! How are you today?", "audioUrl": "" },
+          { "id": "l2", "word": "Good Morning", "meaning": "A polite greeting used from sunrise until noon.", "example": "Good morning, team! Let's start the meeting.", "audioUrl": "" },
+          { "id": "l3", "word": "Good Afternoon", "meaning": "A polite greeting used from noon until early evening.", "example": "Good afternoon, sir. How can I help you?", "audioUrl": "" },
+          { "id": "l4", "word": "Good Evening", "meaning": "A polite greeting used in the evening hours.", "example": "Good evening, everyone. Welcome to the event.", "audioUrl": "" },
+          { "id": "l5", "word": "Goodbye", "meaning": "A phrase used when leaving or saying farewell.", "example": "Goodbye! Have a wonderful weekend.", "audioUrl": "" },
+          { "id": "l6", "word": "Please", "meaning": "A polite word used to ask for something nicely.", "example": "Could you pass the salt, please?", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "Hello! How are you today?" },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "Good _______, everyone! Have a great morning.", "correctAnswer": "morning" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a friendly AI English tutor. The student is practicing basic greetings. Respond to their greeting (e.g. 'Hello', 'Good morning') with a warm, encouraging greeting of your own and ask a simple follow-up question." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "Which greeting is used in the morning?", "options": ["Good afternoon", "Good morning", "Good night"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "What is a polite way to say goodbye?", "options": ["Goodbye", "Please", "Hello"], "correctOptionIndex": 0 },
+          { "qId": 3, "question": "Which word is used to show politeness when requesting something?", "options": ["Goodbye", "Please", "No"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "What is the correct response to 'How are you?'", "options": ["I am fine, thank you", "Good night", "Goodbye"], "correctOptionIndex": 0 },
+          { "qId": 5, "question": "When do we say 'Good Evening'?", "options": ["In the morning", "At noon", "In the evening"], "correctOptionIndex": 2 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 1! You can now confidently greet others, use polite expressions, and respond to basic everyday greetings."
+        }
+      }
+    },
+    {
+      "id": "2",
+      "lessonId": 2,
+      "phase": "beginner",
+      "dayNumber": 2,
+      "title": "Introducing Yourself",
+      "description": "Learn how to state your name, ask for someone else's name, and say 'Nice to meet you'.",
+      "steps": {
+        "learn": [
+          { "id": "l7", "word": "Introduce", "meaning": "To present someone or yourself by name to others.", "example": "Let me introduce myself: my name is Sarah.", "audioUrl": "" },
+          { "id": "l8", "word": "Name", "meaning": "A word by which a person, place, or thing is known.", "example": "What is your name?", "audioUrl": "" },
+          { "id": "l9", "word": "Meet", "meaning": "To come into the presence or company of someone.", "example": "It is nice to meet you.", "audioUrl": "" },
+          { "id": "l10", "word": "Welcome", "meaning": "A warm greeting given to a newcomer.", "example": "Welcome to our English class!", "audioUrl": "" },
+          { "id": "l11", "word": "Friend", "meaning": "A person whom one knows and has a bond of mutual affection with.", "example": "This is my friend, John.", "audioUrl": "" },
+          { "id": "l12", "word": "Country", "meaning": "The nation where a person lives or was born.", "example": "Which country are you from?", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "My name is John. Nice to meet you." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "Nice to _______ you, Sarah.", "correctAnswer": "meet" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a friendly AI English tutor. Ask the student for their name and country. When they introduce themselves, respond warmly, tell them your name (WeBot), and say 'Nice to meet you!'" }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What is the standard response after someone introduces themselves?", "options": ["Goodbye", "Nice to meet you", "Please"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "How do you ask for someone's name?", "options": ["Where are you?", "What is your name?", "Who are they?"], "correctOptionIndex": 1 },
+          { "qId": 3, "question": "What is a 'friend'?", "options": ["A person you know and like", "A stranger", "An enemy"], "correctOptionIndex": 0 },
+          { "qId": 4, "question": "Fill in the blank: '_______ to our class!'", "options": ["Introduce", "Meet", "Welcome"], "correctOptionIndex": 2 },
+          { "qId": 5, "question": "What does 'introduce' mean?", "options": ["To leave a place", "To present by name", "To sleep"], "correctOptionIndex": 1 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 2! You now know how to introduce yourself, state your name, share where you are from, and greet new people politely."
+        }
+      }
+    },
+    {
+      "id": "3",
+      "lessonId": 3,
+      "phase": "beginner",
+      "dayNumber": 3,
+      "title": "Talking About Family",
+      "description": "Learn the words for common family members like father, mother, brother, and sister.",
+      "steps": {
+        "learn": [
+          { "id": "l13", "word": "Family", "meaning": "A group of parents and children living together.", "example": "I love spending time with my family.", "audioUrl": "" },
+          { "id": "l14", "word": "Father", "meaning": "A male parent.", "example": "My father is a teacher.", "audioUrl": "" },
+          { "id": "l15", "word": "Mother", "meaning": "A female parent.", "example": "My mother cooked a delicious dinner.", "audioUrl": "" },
+          { "id": "l16", "word": "Brother", "meaning": "A male sibling.", "example": "I have one older brother.", "audioUrl": "" },
+          { "id": "l17", "word": "Sister", "meaning": "A female sibling.", "example": "My sister is studying at university.", "audioUrl": "" },
+          { "id": "l18", "word": "Parents", "meaning": "A person's father and mother.", "example": "My parents live in London.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "I have a brother and a sister." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "My father and mother are my _______.", "correctAnswer": "parents" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a friendly AI English tutor. Ask the student to tell you about their family members. Ask questions like 'How many brothers or sisters do you have?' and encourage them to use vocabulary like father, mother, sister, or brother." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What do we call our mother and father together?", "options": ["Siblings", "Parents", "Children"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "What is a female sibling called?", "options": ["Brother", "Sister", "Father"], "correctOptionIndex": 1 },
+          { "qId": 3, "question": "What is a male sibling called?", "options": ["Brother", "Sister", "Mother"], "correctOptionIndex": 0 },
+          { "qId": 4, "question": "Which word represents a male parent?", "options": ["Mother", "Father", "Sister"], "correctOptionIndex": 1 },
+          { "qId": 5, "question": "Which word represents a female parent?", "options": ["Mother", "Father", "Brother"], "correctOptionIndex": 0 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 3! You can now talk about your family members and describe basic familial relationships in English."
+        }
+      }
+    },
+    {
+      "id": "4",
+      "lessonId": 4,
+      "phase": "beginner",
+      "dayNumber": 4,
+      "title": "Asking for Directions",
+      "description": "Learn essential phrases to ask for help when navigating, such as 'Where is...?' and 'Go straight'.",
+      "steps": {
+        "learn": [
+          { "id": "l19", "word": "Where", "meaning": "At, in, or to which place or position.", "example": "Where is the nearest restroom?", "audioUrl": "" },
+          { "id": "l20", "word": "Turn Left", "meaning": "To change direction towards the left side.", "example": "Turn left at the next traffic light.", "audioUrl": "" },
+          { "id": "l21", "word": "Turn Right", "meaning": "To change direction towards the right side.", "example": "Go straight, then turn right at the corner.", "audioUrl": "" },
+          { "id": "l22", "word": "Go Straight", "meaning": "To proceed ahead without turning.", "example": "Go straight down this street for two blocks.", "audioUrl": "" },
+          { "id": "l23", "word": "Station", "meaning": "A place where passenger trains or buses regularly stop.", "example": "Excuse me, where is the train station?", "audioUrl": "" },
+          { "id": "l24", "word": "Hotel", "meaning": "An establishment that provides lodging for travelers.", "example": "I am staying at the Grand Hotel.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "Excuse me, where is the train station?" },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "Go straight and then turn _______ to the left side.", "correctAnswer": "left" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a helpful pedestrian in New York. The student will ask you for directions to the station or hotel. Give them a simple, clear set of instructions like 'Go straight for two blocks, then turn right. The station is on your left.'" }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What is the opposite of 'Turn Left'?", "options": ["Go straight", "Turn right", "Stop"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "What question word is used to ask about a location?", "options": ["When", "Who", "Where"], "correctOptionIndex": 2 },
+          { "qId": 3, "question": "What does 'Go straight' mean?", "options": ["Turn immediately", "Move forward without turning", "Go backwards"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "Where do passenger trains stop?", "options": ["Hotel", "Station", "Market"], "correctOptionIndex": 1 },
+          { "qId": 5, "question": "What is a polite way to get someone's attention before asking directions?", "options": ["Hey you", "Excuse me", "Goodbye"], "correctOptionIndex": 1 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 4! You can now ask for directions to local landmarks and understand basic directions like turning left, right, and going straight."
+        }
+      }
+    },
+    {
+      "id": "5",
+      "lessonId": 5,
+      "phase": "beginner",
+      "dayNumber": 5,
+      "title": "Numbers & Telling Time",
+      "description": "Learn numbers 1-20, telling time, and asking 'What time is it?'.",
+      "steps": {
+        "learn": [
+          { "id": "l25", "word": "Time", "meaning": "The progress of existence as measured in hours, minutes, and seconds.", "example": "What time is it?", "audioUrl": "" },
+          { "id": "l26", "word": "Hour", "meaning": "A period of time equal to 60 minutes.", "example": "The meeting will start in one hour.", "audioUrl": "" },
+          { "id": "l27", "word": "Minute", "meaning": "A period of time equal to 60 seconds.", "example": "Wait a minute, please.", "audioUrl": "" },
+          { "id": "l28", "word": "O'clock", "meaning": "Used to specify the hour of the day.", "example": "It is exactly three o'clock.", "audioUrl": "" },
+          { "id": "l29", "word": "Half Past", "meaning": "30 minutes past the designated hour.", "example": "We will meet at half past four.", "audioUrl": "" },
+          { "id": "l30", "word": "Quarter", "meaning": "15 minutes before or after the hour.", "example": "It is a quarter to five.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "It is half past six." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "What _______ is it? It is two o'clock.", "correctAnswer": "time" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a friendly AI English tutor. Ask the student what time they usually wake up or eat dinner. Validate their answer and practice time vocabulary like 'o'clock', 'half past', and 'minutes'." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What does 'half past seven' mean in numbers?", "options": ["7:15", "7:30", "7:45"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "How many minutes are in an hour?", "options": ["60", "30", "12"], "correctOptionIndex": 0 },
+          { "qId": 3, "question": "How do you ask about the current time?", "options": ["Where is it?", "What time is it?", "Who is it?"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "What does 'quarter to six' mean?", "options": ["5:45", "6:15", "6:30"], "correctOptionIndex": 0 },
+          { "qId": 5, "question": "What does 'ten o'clock' mean?", "options": ["10:30", "10:00", "9:50"], "correctOptionIndex": 1 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 5! You now know how to count, tell the time, ask for the time, and use phrases like 'half past' and 'quarter to'."
+        }
+      }
+    },
+    {
+      "id": "6",
+      "lessonId": 6,
+      "phase": "intermediate",
+      "dayNumber": 6,
+      "title": "Daily Routine",
+      "description": "Learn vocabulary and verbs used to describe common actions throughout your day.",
+      "steps": {
+        "learn": [
+          { "id": "l31", "word": "Wake Up", "meaning": "To emerge or cause to emerge from sleep.", "example": "I wake up at 6:00 AM every day.", "audioUrl": "" },
+          { "id": "l32", "word": "Breakfast", "meaning": "The first meal of the day, eaten in the morning.", "example": "I usually eat eggs and toast for breakfast.", "audioUrl": "" },
+          { "id": "l33", "word": "Shower", "meaning": "An act of washing oneself in a shower.", "example": "I take a quick shower before going to work.", "audioUrl": "" },
+          { "id": "l34", "word": "Work", "meaning": "Activity involving mental or physical effort done in order to achieve a purpose.", "example": "I walk to work every morning.", "audioUrl": "" },
+          { "id": "l35", "word": "Exercise", "meaning": "Physical activity that is done in order to become stronger and healthier.", "example": "I exercise at the gym after work.", "audioUrl": "" },
+          { "id": "l36", "word": "Sleep", "meaning": "A condition of body and mind which typically recurs for several hours.", "example": "I go to sleep at 10 PM.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "I eat breakfast and then go to work." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "I usually _______ up at 6:00 AM.", "correctAnswer": "wake" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a friendly AI English tutor. Ask the student about their typical daily routine. Ask questions like 'What do you do in the morning?' and encourage them to describe their day step by step." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What is the first meal of the day called?", "options": ["Lunch", "Dinner", "Breakfast"], "correctOptionIndex": 2 },
+          { "qId": 2, "question": "What is the opposite of waking up?", "options": ["Showering", "Sleeping", "Exercising"], "correctOptionIndex": 1 },
+          { "qId": 3, "question": "Which verb means to wash yourself standing up under water spray?", "options": ["Take a shower", "Eat", "Sleep"], "correctOptionIndex": 0 },
+          { "qId": 4, "question": "When do people typically eat breakfast?", "options": ["At night", "In the morning", "In the afternoon"], "correctOptionIndex": 1 },
+          { "qId": 5, "question": "What do you do at a gym to stay healthy?", "options": ["Sleep", "Eat", "Exercise"], "correctOptionIndex": 2 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 6! You are now able to describe your daily routine, morning activities, and everyday habits."
+        }
+      }
+    },
+    {
+      "id": "7",
+      "lessonId": 7,
+      "phase": "intermediate",
+      "dayNumber": 7,
+      "title": "Ordering Food",
+      "description": "Learn food vocabulary and how to interact with a waiter in a restaurant.",
+      "steps": {
+        "learn": [
+          { "id": "l37", "word": "Menu", "meaning": "A list of dishes available in a restaurant.", "example": "May I please see the menu?", "audioUrl": "" },
+          { "id": "l38", "word": "Order", "meaning": "To request food or drink in a restaurant.", "example": "Are you ready to order?", "audioUrl": "" },
+          { "id": "l39", "word": "Water", "meaning": "A clear liquid that is necessary for life.", "example": "Could I get a glass of water, please?", "audioUrl": "" },
+          { "id": "l40", "word": "Bill", "meaning": "A printed list showing how much you must pay.", "example": "Could we have the bill, please?", "audioUrl": "" },
+          { "id": "l41", "word": "Delicious", "meaning": "Highly pleasant to the taste.", "example": "This pasta is absolutely delicious!", "audioUrl": "" },
+          { "id": "l42", "word": "Dessert", "meaning": "Sweet food eaten at the end of a meal.", "example": "I would like chocolate cake for dessert.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "I would like to order the chicken pasta, please." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "Excuse me, could we have the _______ to pay?", "correctAnswer": "bill" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a polite waiter in an Italian restaurant. The student wants to order dinner. Ask them what they would like to drink, then what main dish they want, and offer them dessert at the end." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What do you ask for when you want to choose what to eat?", "options": ["Bill", "Menu", "Receipt"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "What is 'dessert'?", "options": ["A dry sandy place", "Sweet food at the end of a meal", "The main dish"], "correctOptionIndex": 1 },
+          { "qId": 3, "question": "What do you say to the waiter when you are ready to pay?", "options": ["The menu, please", "The bill, please", "Thank you, goodbye"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "Which word is a synonym for 'very tasty'?", "options": ["Bitter", "Delicious", "Sour"], "correctOptionIndex": 1 },
+          { "qId": 5, "question": "How do you request water politely?", "options": ["Give me water", "I want water now", "Could I have some water, please?"], "correctOptionIndex": 2 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 7! You can now order food in a restaurant, talk to waitstaff, ask for the menu and the bill, and express your preferences."
+        }
+      }
+    },
+    {
+      "id": "8",
+      "lessonId": 8,
+      "phase": "intermediate",
+      "dayNumber": 8,
+      "title": "Shopping & Prices",
+      "description": "Learn vocabulary for clothing, items, and asking 'How much does this cost?'.",
+      "steps": {
+        "learn": [
+          { "id": "l43", "word": "Cost", "meaning": "The amount of money needed to buy something.", "example": "How much does this shirt cost?", "audioUrl": "" },
+          { "id": "l44", "word": "Price", "meaning": "The amount of money expected, required, or given in payment.", "example": "The price of this bag is fifty dollars.", "audioUrl": "" },
+          { "id": "l45", "word": "Discount", "meaning": "A deduction from the usual cost of something.", "example": "Is there any discount on these shoes?", "audioUrl": "" },
+          { "id": "l46", "word": "Size", "meaning": "A standard measurement of clothing.", "example": "Do you have this dress in a medium size?", "audioUrl": "" },
+          { "id": "l47", "word": "Buy", "meaning": "To obtain in exchange for payment.", "example": "I want to buy a new phone.", "audioUrl": "" },
+          { "id": "l48", "word": "Cash", "meaning": "Money in coins or bills, rather than cards.", "example": "Will you pay by cash or credit card?", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "How much does this dress cost?" },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "Is there a _______ on these shoes? They are on sale.", "correctAnswer": "discount" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a helpful shop assistant. The student wants to buy a jacket. Ask them for their size (small, medium, large), tell them the price ($80), offer a 10% discount, and ask if they will pay with cash or card." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What question do you ask when you want to know the price?", "options": ["Where is it?", "How much does this cost?", "What is this?"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "What is 'cash'?", "options": ["Physical paper money and coins", "A credit card", "A discount coupon"], "correctOptionIndex": 0 },
+          { "qId": 3, "question": "What does a 'discount' do to the price?", "options": ["Increases it", "Makes it cheaper", "Keeps it the same"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "If clothing is too small, what do you need to change?", "options": ["The price", "The size", "The color"], "correctOptionIndex": 1 },
+          { "qId": 5, "question": "What is the opposite of 'sell'?", "options": ["Cost", "Pay", "Buy"], "correctOptionIndex": 2 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 8! You are now able to ask for prices, discuss sizes, pay in different ways, and understand shopping discounts."
+        }
+      }
+    },
+    {
+      "id": "9",
+      "lessonId": 9,
+      "phase": "intermediate",
+      "dayNumber": 9,
+      "title": "Weather & Seasons",
+      "description": "Learn to describe the weather, discuss the four seasons, and talk about temperatures.",
+      "steps": {
+        "learn": [
+          { "id": "l49", "word": "Sunny", "meaning": "Bright with sunlight.", "example": "It is a beautiful sunny day.", "audioUrl": "" },
+          { "id": "l50", "word": "Rainy", "meaning": "Having a great deal of rainfall.", "example": "Don't forget your umbrella on rainy days.", "audioUrl": "" },
+          { "id": "l51", "word": "Cold", "meaning": "Of or at a low temperature.", "example": "It gets very cold here in December.", "audioUrl": "" },
+          { "id": "l52", "word": "Summer", "meaning": "The warmest season of the year.", "example": "I love going to the beach in the summer.", "audioUrl": "" },
+          { "id": "l53", "word": "Winter", "meaning": "The coldest season of the year.", "example": "It snows a lot during the winter.", "audioUrl": "" },
+          { "id": "l54", "word": "Forecast", "meaning": "A prediction of future weather.", "example": "What is the weather forecast for tomorrow?", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "It is going to rain tomorrow afternoon." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "It is very hot today because it is _______.", "correctAnswer": "sunny" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a local weather reporter. The student wants to know what the weather will be like. Ask them where they are located, tell them it is sunny/rainy, and give them a simple recommendation like 'Wear a warm coat' or 'Bring an umbrella.'" }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What should you bring outside on a rainy day?", "options": ["Sunglasses", "An umbrella", "A heavy coat"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "Which season is the warmest?", "options": ["Winter", "Summer", "Autumn"], "correctOptionIndex": 1 },
+          { "qId": 3, "question": "What is a 'forecast'?", "options": ["Past weather details", "A weather prediction", "A rain storm"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "Which word describes a bright day full of sunshine?", "options": ["Sunny", "Rainy", "Cloudy"], "correctOptionIndex": 0 },
+          { "qId": 5, "question": "In which season does it usually snow?", "options": ["Summer", "Spring", "Winter"], "correctOptionIndex": 2 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 9! You now know how to describe the weather condition, ask for weather forecasts, and talk about different seasons."
+        }
+      }
+    },
+    {
+      "id": "10",
+      "lessonId": 10,
+      "phase": "intermediate",
+      "dayNumber": 10,
+      "title": "Hobbies & Free Time",
+      "description": "Learn to talk about your favorite leisure activities, sports, and what you do for fun.",
+      "steps": {
+        "learn": [
+          { "id": "l55", "word": "Hobby", "meaning": "An activity done regularly in one's leisure time for pleasure.", "example": "My favorite hobby is reading books.", "audioUrl": "" },
+          { "id": "l56", "word": "Reading", "meaning": "The action or skill of reading written matter.", "example": "Reading helps me relax in the evening.", "audioUrl": "" },
+          { "id": "l57", "word": "Music", "meaning": "Vocal or instrumental sounds combined in a pleasing way.", "example": "I listen to music while cooking.", "audioUrl": "" },
+          { "id": "l58", "word": "Play", "meaning": "To engage in activity for enjoyment or sport.", "example": "I like to play football on weekends.", "audioUrl": "" },
+          { "id": "l59", "word": "Watch", "meaning": "Look at or observe attentively over a period of time.", "example": "We like to watch movies together.", "audioUrl": "" },
+          { "id": "l60", "word": "Travel", "meaning": "Make a journey, typically of some length.", "example": "I want to travel to Europe next year.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "In my free time, I love listening to music." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "I like to _______ books before going to bed.", "correctAnswer": "read" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a friendly club organizer. Ask the student about their hobbies and free-time interests. Suggest a club they could join (e.g. Book Club, Soccer Club) based on their answers, and encourage them to explain why they like that hobby." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What is an activity you do for pleasure in your spare time?", "options": ["Hobby", "Work", "Task"], "correctOptionIndex": 0 },
+          { "qId": 2, "question": "Which verb is used with instruments and sports?", "options": ["Read", "Play", "Watch"], "correctOptionIndex": 1 },
+          { "qId": 3, "question": "What is 'travel'?", "options": ["Working in an office", "Going on a journey to places", "Sleeping at home"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "What do you do with books?", "options": ["Read them", "Play them", "Listen them"], "correctOptionIndex": 0 },
+          { "qId": 5, "question": "Where do people watch movies?", "options": ["In a library", "In a cinema", "In a park"], "correctOptionIndex": 1 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 10! You can now talk about hobbies, sports, travel, and discuss what you like to do in your free time."
+        }
+      }
+    },
+    {
+      "id": "11",
+      "lessonId": 11,
+      "phase": "advanced",
+      "dayNumber": 11,
+      "title": "Workplace & Jobs",
+      "description": "Learn vocabulary to talk about professional careers, tasks, and typical business situations.",
+      "steps": {
+        "learn": [
+          { "id": "l61", "word": "Career", "meaning": "An occupation undertaken for a significant period of a person's life.", "example": "He is planning a career in software engineering.", "audioUrl": "" },
+          { "id": "l62", "word": "Colleague", "meaning": "A person with whom one works in a profession or business.", "example": "I discussed the new project with my colleague.", "audioUrl": "" },
+          { "id": "l63", "word": "Meeting", "meaning": "An assembly of people for a professional discussion.", "example": "The sales meeting starts at 9:00 AM.", "audioUrl": "" },
+          { "id": "l64", "word": "Manager", "meaning": "A person responsible for controlling or administering an organization.", "example": "Our manager assigned us the weekly tasks.", "audioUrl": "" },
+          { "id": "l65", "word": "Salary", "meaning": "A fixed regular payment made by an employer to an employee.", "example": "They offered him a competitive salary.", "audioUrl": "" },
+          { "id": "l66", "word": "Interview", "meaning": "A formal meeting to evaluate a candidate for a job.", "example": "She has a job interview tomorrow morning.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "I need to discuss the project update with my colleague." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "The manager led the weekly _______ in the conference room.", "correctAnswer": "meeting" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a professional HR manager conducting a practice job interview. Ask the student 'Tell me about yourself' and 'Why do you want this job?'. Provide feedback on how to make their responses sound more professional and confident." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What do we call a person we work with?", "options": ["Boss", "Colleague", "Client"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "What is a job interview?", "options": ["A business lunch", "A meeting to evaluate a job candidate", "A holiday party"], "correctOptionIndex": 1 },
+          { "qId": 3, "question": "Who is responsible for managing a team?", "options": ["Colleague", "Manager", "Intern"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "What is the term for a fixed regular payment for work?", "options": ["Bill", "Salary", "Discount"], "correctOptionIndex": 1 },
+          { "qId": 5, "question": "What is a 'career'?", "options": ["A temporary hobby", "A long-term profession", "A weekend trip"], "correctOptionIndex": 1 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 11! You now have the professional vocabulary to discuss your job, colleagues, meetings, and interviews in English."
+        }
+      }
+    },
+    {
+      "id": "12",
+      "lessonId": 12,
+      "phase": "advanced",
+      "dayNumber": 12,
+      "title": "Making Plans",
+      "description": "Learn to coordinate schedules, invite others to events, and set dates.",
+      "steps": {
+        "learn": [
+          { "id": "l67", "word": "Schedule", "meaning": "A plan for carrying out process or meetings.", "example": "My schedule is very busy this week.", "audioUrl": "" },
+          { "id": "l68", "word": "Appointment", "meaning": "An arrangement to meet someone at a particular time.", "example": "I have a dentist appointment at 2 PM.", "audioUrl": "" },
+          { "id": "l69", "word": "Busy", "meaning": "Having a great deal to do; occupied.", "example": "Are you busy on Friday night?", "audioUrl": "" },
+          { "id": "l70", "word": "Free", "meaning": "Not occupied or busy; available.", "example": "I am free this weekend. Let's hang out.", "audioUrl": "" },
+          { "id": "l71", "word": "Invite", "meaning": "Request the presence or participation of someone.", "example": "I would like to invite you to my birthday party.", "audioUrl": "" },
+          { "id": "l72", "word": "Confirm", "meaning": "Establish the truth or correctness of a plan.", "example": "Please call me to confirm our meeting time.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "Are you free to meet this Saturday at five?" },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "I have a dentist _______ tomorrow morning.", "correctAnswer": "appointment" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a friend trying to organize a weekend trip. Propose a plan to the student (e.g. going to a movie or museum) and ask them if they are free. Negotiate the date and time, and confirm the details at the end." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What is a synonym for 'available'?", "options": ["Busy", "Free", "Late"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "What do you do when you ask someone to attend your party?", "options": ["Invite them", "Confirm them", "Cancel them"], "correctOptionIndex": 0 },
+          { "qId": 3, "question": "What is an 'appointment'?", "options": ["A surprise visit", "An arranged plan to meet at a set time", "A business model"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "If you have a lot of things to do, you are:", "options": ["Free", "Busy", "Bored"], "correctOptionIndex": 1 },
+          { "qId": 5, "question": "What does it mean to 'confirm' a plan?", "options": ["To cancel it", "To verify it is going ahead", "To delay it"], "correctOptionIndex": 1 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 12! You now know how to check someone's availability, make appointments, invite people, and confirm plans."
+        }
+      }
+    },
+    {
+      "id": "13",
+      "lessonId": 13,
+      "phase": "advanced",
+      "dayNumber": 13,
+      "title": "Expressing Feelings",
+      "description": "Learn to describe emotional states, express empathy, and communicate how you feel.",
+      "steps": {
+        "learn": [
+          { "id": "l73", "word": "Excited", "meaning": "Very enthusiastic and eager.", "example": "I am so excited about starting my new job!", "audioUrl": "" },
+          { "id": "l74", "word": "Nervous", "meaning": "Easily agitated or alarmed; anxious.", "example": "I feel nervous before speaking in public.", "audioUrl": "" },
+          { "id": "l75", "word": "Tired", "meaning": "In need of sleep or rest; weary.", "example": "After a long workday, I feel very tired.", "audioUrl": "" },
+          { "id": "l76", "word": "Happy", "meaning": "Feeling or showing pleasure or contentment.", "example": "She was happy to receive the good news.", "audioUrl": "" },
+          { "id": "l77", "word": "Sad", "meaning": "Feeling or showing sorrow; unhappy.", "example": "He felt sad when his friend moved away.", "audioUrl": "" },
+          { "id": "l78", "word": "Anxious", "meaning": "Experiencing worry, unease, or nervousness.", "example": "Waiting for test results makes me anxious.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "I feel a bit nervous about the interview." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "I worked for 12 hours today, so I am very _______.", "correctAnswer": "tired" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are an empathetic friend. The student will tell you about an event that made them feel stressed, excited, or worried. Validate their feelings, offer support, and ask how they are coping." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "How do you feel if you are eager and looking forward to something good?", "options": ["Nervous", "Excited", "Sad"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "What is the synonym for 'anxious'?", "options": ["Happy", "Worried / Nervous", "Calm"], "correctOptionIndex": 1 },
+          { "qId": 3, "question": "If you need sleep, you are:", "options": ["Excited", "Tired", "Happy"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "What is the opposite of 'sad'?", "options": ["Nervous", "Anxious", "Happy"], "correctOptionIndex": 2 },
+          { "qId": 5, "question": "How might someone feel before a big exam?", "options": ["Tired", "Nervous", "Sleepy"], "correctOptionIndex": 1 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 13! You are now equipped with the vocabulary to explain your feelings, emotions, and communicate states like anxiety or excitement."
+        }
+      }
+    },
+    {
+      "id": "14",
+      "lessonId": 14,
+      "phase": "advanced",
+      "dayNumber": 14,
+      "title": "Travel & Airports",
+      "description": "Learn key travel vocabulary including checking in, boarding passes, and custom processes.",
+      "steps": {
+        "learn": [
+          { "id": "l79", "word": "Flight", "meaning": "A journey made through the air by an airplane.", "example": "My flight to Paris departs at noon.", "audioUrl": "" },
+          { "id": "l80", "word": "Luggage", "meaning": "Suitcases and bags containing a traveler's belongings.", "example": "Please put your luggage on the scale.", "audioUrl": "" },
+          { "id": "l81", "word": "Passport", "meaning": "An official document certifying the holder's identity and citizenship.", "example": "You must show your passport at border control.", "audioUrl": "" },
+          { "id": "l82", "word": "Boarding Pass", "meaning": "A card that a passenger must show before boarding a plane.", "example": "Here is your boarding pass, seat 12A.", "audioUrl": "" },
+          { "id": "l83", "word": "Gate", "meaning": "The exit at an airport where passengers board their aircraft.", "example": "Flight 302 is boarding at Gate 15.", "audioUrl": "" },
+          { "id": "l84", "word": "Customs", "meaning": "The place at an airport where officials check incoming goods.", "example": "We had to go through customs after landing.", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "Here is my passport and boarding pass." },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "Please show your _______ at border security control.", "correctAnswer": "passport" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are an airport check-in agent. Ask the student for their destination, passport, and if they have any bags to check in. Give them their boarding pass and gate number, wishing them a safe flight." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What document is required for international travel?", "options": ["Driving license", "Passport", "Boarding pass"], "correctOptionIndex": 1 },
+          { "qId": 2, "question": "Where do you board your airplane at the airport?", "options": ["Restroom", "Customs", "Gate"], "correctOptionIndex": 2 },
+          { "qId": 3, "question": "What is the card called that lets you board the plane?", "options": ["Passport", "Ticket receipt", "Boarding pass"], "correctOptionIndex": 2 },
+          { "qId": 4, "question": "What do we call our suitcases and travel bags?", "options": ["Luggage", "Customs", "Gates"], "correctOptionIndex": 0 },
+          { "qId": 5, "question": "Where do airport officials check incoming international goods?", "options": ["Restroom", "Customs", "Gate"], "correctOptionIndex": 1 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 14! You now know how to navigate airport check-in, customs, boarding gates, and talk about travel items."
+        }
+      }
+    },
+    {
+      "id": "15",
+      "lessonId": 15,
+      "phase": "advanced",
+      "dayNumber": 15,
+      "title": "Emergency Situations",
+      "description": "Learn critical vocabulary to seek help, report accidents, or communicate in emergencies.",
+      "steps": {
+        "learn": [
+          { "id": "l85", "word": "Help", "meaning": "To make it easier for someone to do something; aid.", "example": "Please help me, I lost my wallet!", "audioUrl": "" },
+          { "id": "l86", "word": "Emergency", "meaning": "A serious, unexpected, and often dangerous situation.", "example": "In case of emergency, call 911 immediately.", "audioUrl": "" },
+          { "id": "l87", "word": "Police", "meaning": "The civil force of a state responsible for law and order.", "example": "The police arrived quickly to help us.", "audioUrl": "" },
+          { "id": "l88", "word": "Doctor", "meaning": "A qualified practitioner of medicine.", "example": "I need to see a doctor right away.", "audioUrl": "" },
+          { "id": "l89", "word": "Hospital", "meaning": "An institution providing medical treatment.", "example": "The ambulance took him to the nearest hospital.", "audioUrl": "" },
+          { "id": "l90", "word": "Lost", "meaning": "Unable to find one's way; not knowing where you are.", "example": "Excuse me, I am lost. Can you help me?", "audioUrl": "" }
+        ],
+        "practice": [
+          { "subStepId": 1, "type": "listen_repeat", "title": "Listen & Repeat", "subtitle": "Listen to the audio and repeat to improve your pronunciation.", "phrase": "Please call an ambulance, it is an emergency!" },
+          { "subStepId": 2, "type": "fill_blanks", "title": "Fill in the Blanks", "subtitle": "Complete the sentences with the correct words.", "sentence": "Excuse me, I am _______, where is the hotel?", "correctAnswer": "lost" },
+          { "subStepId": 3, "type": "speak_yourself", "title": "Speak Yourself", "subtitle": "Practice speaking and record your voice.", "aiPrompt": "You are a helpful emergency dispatcher. The student will report an emergency (e.g. they are lost, have had an accident, or need a doctor). Ask clarifying questions, keep them calm, and tell them what assistance is on the way." }
+        ],
+        "quiz": [
+          { "qId": 1, "question": "What number do you call in a life-threatening emergency in the US?", "options": ["911", "411", "0"], "correctOptionIndex": 0 },
+          { "qId": 2, "question": "Where should you go if you are severely injured?", "options": ["Hotel", "Hospital", "Station"], "correctOptionIndex": 1 },
+          { "qId": 3, "question": "What is a practitioner of medicine called?", "options": ["Police", "Doctor", "Waiter"], "correctOptionIndex": 1 },
+          { "qId": 4, "question": "What should you say if you cannot find your way?", "options": ["I am lost", "Goodbye", "Excuse me, please"], "correctOptionIndex": 0 },
+          { "qId": 5, "question": "Who is responsible for civil safety and security?", "options": ["Doctor", "Police", "Clerk"], "correctOptionIndex": 1 }
+        ],
+        "review": {
+          "summary": "You have completed Lesson 15! You can now seek help, explain simple emergency situations, call services, and describe medical or safety issues."
+        }
+      }
+    }
+  ]
+}

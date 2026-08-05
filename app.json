@@ -38,7 +38,18 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "expo-video",
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Allow WeTalk to access your microphone to practice speaking.",
+          "speechRecognitionPermission": "Allow WeTalk to use speech recognition to evaluate your pronunciation."
+        }
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -31,15 +31,7 @@ function resolveApiHost(): string {
     return process.env.REACT_NATIVE_PACKAGER_HOSTNAME;
   }
 
-  if (Platform.OS === 'android') {
-    return expoHost === 'localhost' || expoHost === '127.0.0.1' ? '10.0.2.2' : 'localhost';
-  }
-
-  if (Platform.OS === 'web' || Platform.OS === 'ios') {
-    return expoHost || 'localhost';
-  }
-
-  return 'localhost';
+  return '192.168.18.101';
 }
 
 function buildApiUrl(host: string): string {

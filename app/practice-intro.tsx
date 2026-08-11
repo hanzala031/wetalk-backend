@@ -15,7 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import lessonsData from '@/data/lessons.json';
+import { getLessonWithFallback } from '@/lib/api-client';
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +27,7 @@ const LIGHT_BLUE = '#E8EFFF';
 
 export default function PracticeIntroScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
-  const { userAvatar } = useAuth();
+  const { userAvatar, userToken } = useAuth();
 
   const [isListenRepeatCompleted, setIsListenRepeatCompleted] = useState(false);
   const [isFillBlanksCompleted, setIsFillBlanksCompleted] = useState(false);
@@ -41,9 +41,8 @@ export default function PracticeIntroScreen() {
       setIsListenRepeatCompleted(listenCompleted === 'true');
       setIsFillBlanksCompleted(fillCompleted === 'true');
 
-      const allLessons = lessonsData.lessons || [];
-      const currentLesson = allLessons.find(l => l.id === activeId);
-      if (currentLesson) {
+      const currentLesson = await getLessonWithFallback(activeId, userToken);
+      if (currentLesson && currentLesson.title) {
         setLessonTitle(currentLesson.title);
       }
     } catch (e) {
@@ -57,6 +56,8 @@ export default function PracticeIntroScreen() {
     }, [lessonId])
   );
 
+  const safeLessonTitle = (lessonTitle || 'lesson').toLowerCase();
+
   const practiceActivities = [
     {
       id: 1,
@@ -68,14 +69,14 @@ export default function PracticeIntroScreen() {
     {
       id: 2,
       title: 'Fill in the Blanks',
-      subtitle: `Complete sentences about ${lessonTitle.toLowerCase()}.`,
+      subtitle: `Complete sentences about ${safeLessonTitle}.`,
       icon: 'book-outline',
       status: isFillBlanksCompleted ? 'Completed' : (isListenRepeatCompleted ? 'Start' : 'Locked'),
     },
     {
       id: 3,
       title: 'Speak Yourself',
-      subtitle: `Practice speaking about ${lessonTitle.toLowerCase()}.`,
+      subtitle: `Practice speaking about ${safeLessonTitle}.`,
       icon: 'mic-outline',
       status: isFillBlanksCompleted ? 'Start' : 'Locked',
     },
@@ -97,7 +98,7 @@ export default function PracticeIntroScreen() {
             </TouchableOpacity>
             <View style={styles.avatarContainer}>
               <Image 
-                source={{ uri: userAvatar || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }} 
+                source={{ uri: userAvatar || 'https://api.dicebear.com/7.x/adventurer/png?seed=Felix&size=128' }} 
                 style={styles.avatar}
               />
             </View>
@@ -247,6 +248,8 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 4,
+    minWidth: 70,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
@@ -258,6 +261,8 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 70,
   },
   iconBtn: {
     marginRight: 10,

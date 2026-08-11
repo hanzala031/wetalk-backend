@@ -19,7 +19,7 @@ import { useAuth } from '@/context/auth-context';
 import * as Speech from 'expo-speech';
 import { MotiView, AnimatePresence } from 'moti';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import lessonsData from '@/data/lessons.json';
+import { getLessonWithFallback } from '@/lib/api-client';
 
 const { width } = Dimensions.get('window');
 
@@ -50,68 +50,67 @@ const INITIAL_QUESTIONS: Question[] = [
 
 export default function FillInTheBlanksScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
-  const { userAvatar, syncProgressToBackend } = useAuth();
+  const { userName, userAvatar, syncProgressToBackend, userToken } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isAllCorrect, setIsAllCorrect] = useState(false);
 
   useEffect(() => {
     const activeId = lessonId || '1';
-    const allLessons = lessonsData.lessons || [];
-    const currentLesson = allLessons.find(l => l.id === activeId);
-    
-    if (currentLesson) {
-      const dynamicQs: Question[] = [];
-      let qIndex = 1;
-      
-      // 1. Get fill_blanks question from practice steps if exists
-      if (currentLesson.steps.practice) {
-        const practiceBlank = currentLesson.steps.practice.find((p: any) => p.type === 'fill_blanks');
-        if (practiceBlank && practiceBlank.sentence && practiceBlank.correctAnswer) {
-          const parts = practiceBlank.sentence.split(/_______+/);
-          const prefix = parts[0] || "";
-          const suffix = parts[1] || "";
-          dynamicQs.push({
-            id: qIndex++,
-            prefix: prefix.trim(),
-            suffix: suffix.trim(),
-            correctAnswer: practiceBlank.correctAnswer.trim(),
-            userAnswer: "",
-            status: 'pending' as const
+    getLessonWithFallback(activeId, userToken).then((currentLesson) => {
+      if (currentLesson) {
+        const dynamicQs: Question[] = [];
+        let qIndex = 1;
+        
+        // 1. Get fill_blanks question from practice steps if exists
+        if (currentLesson.steps.practice) {
+          const practiceBlank = currentLesson.steps.practice.find((p: any) => p.type === 'fill_blanks');
+          if (practiceBlank && practiceBlank.sentence && practiceBlank.correctAnswer) {
+            const parts = practiceBlank.sentence.split(/_______+/);
+            const prefix = parts[0] || '';
+            const suffix = parts[1] || '';
+            dynamicQs.push({
+              id: qIndex++,
+              prefix: prefix.trim(),
+              suffix: suffix.trim(),
+              correctAnswer: practiceBlank.correctAnswer.trim(),
+              userAnswer: '',
+              status: 'pending' as const
+            });
+          }
+        }
+        
+        // 2. Generate questions from first 4 words in vocabulary steps.learn
+        if (currentLesson.steps.learn) {
+          const vocabWords = currentLesson.steps.learn.slice(0, 4);
+          vocabWords.forEach((item: any) => {
+            const word = item.word;
+            const sentence = item.example;
+            if (word && sentence) {
+              const index = sentence.toLowerCase().indexOf(word.toLowerCase());
+              if (index !== -1) {
+                const prefix = sentence.substring(0, index);
+                const suffix = sentence.substring(index + word.length);
+                dynamicQs.push({
+                  id: qIndex++,
+                  prefix: prefix,
+                  suffix: suffix,
+                  correctAnswer: word,
+                  userAnswer: '',
+                  status: 'pending' as const
+                });
+              }
+            }
           });
         }
+        
+        if (dynamicQs.length > 0) {
+          setQuestions(dynamicQs);
+        } else {
+          setQuestions(INITIAL_QUESTIONS);
+        }
       }
-      
-      // 2. Generate questions from first 4 words in vocabulary steps.learn
-      if (currentLesson.steps.learn) {
-        const vocabWords = currentLesson.steps.learn.slice(0, 4);
-        vocabWords.forEach((item: any) => {
-          const word = item.word;
-          const sentence = item.example;
-          if (word && sentence) {
-            const index = sentence.toLowerCase().indexOf(word.toLowerCase());
-            if (index !== -1) {
-              const prefix = sentence.substring(0, index);
-              const suffix = sentence.substring(index + word.length);
-              dynamicQs.push({
-                id: qIndex++,
-                prefix: prefix,
-                suffix: suffix,
-                correctAnswer: word,
-                userAnswer: "",
-                status: 'pending' as const
-              });
-            }
-          }
-        });
-      }
-      
-      if (dynamicQs.length > 0) {
-        setQuestions(dynamicQs);
-      } else {
-        setQuestions(INITIAL_QUESTIONS);
-      }
-    }
-  }, [lessonId]);
+    });
+  }, [lessonId, userToken]);
 
   useEffect(() => {
     const allDone = questions.length > 0 && questions.every(q => q.status === 'correct');
@@ -165,7 +164,7 @@ export default function FillInTheBlanksScreen() {
               </TouchableOpacity>
               <View style={styles.avatarContainer}>
                 <Image 
-                  source={{ uri: userAvatar || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }} 
+                  source={{ uri: (userAvatar && userAvatar !== 'default-avatar.png') ? userAvatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'User')}&background=004D73&color=fff` }} 
                   style={styles.avatar}
                 />
               </View>
@@ -313,6 +312,8 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 4,
+    minWidth: 70,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
@@ -324,6 +325,8 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 70,
   },
   iconBtn: {
     marginRight: 10,

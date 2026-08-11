@@ -200,20 +200,6 @@ export default function ChangeTutorScreen() {
         renderItem={renderTutorItem}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ListFooterComponent={
-          <View style={styles.footerBanner}>
-            <Image
-              source={{ uri: 'https://res.cloudinary.com/dgedsmawq/image/upload/v1780390838/ca3613dd317f71434f3c6d88a47de913c6b91bf2_lybs0e.png' }}
-              style={styles.footerRobotImg}
-              contentFit="contain"
-            />
-            <View style={styles.footerTextContainer}>
-              <Text style={styles.footerBannerTitle}>
-                Each tutor has a unique voice{'\n'}and personality.
-              </Text>
-            </View>
-          </View>
-        }
       />
     </SafeAreaView>
   );
@@ -402,37 +388,5 @@ const styles = StyleSheet.create({
     color: NAVY_BLUE,
     fontSize: 10,
     fontFamily: 'Inter-Medium',
-  },
-
-  // Footer Banner
-  footerBanner: {
-    flexDirection: 'row',
-    backgroundColor: '#EDF4FF',
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginTop: 8,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  footerRobotImg: {
-    width: 56,
-    height: 56,
-    marginRight: 10,
-  },
-  footerTextContainer: {
-    flex: 1,
-  },
-  footerBannerTitle: {
-    fontSize: 11.5,
-    fontFamily: 'Inter-SemiBold',
-    color: TEXT_DARK,
-    marginBottom: 2,
-  },
-  footerBannerDesc: {
-    fontSize: 10.5,
-    fontFamily: 'Inter-Regular',
-    color: TEXT_GRAY,
-    lineHeight: 14,
   },
 });

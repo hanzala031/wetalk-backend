@@ -41,7 +41,7 @@ export default function QuizIntroScreen() {
             </TouchableOpacity>
             <View style={styles.avatarContainer}>
               <Image 
-                source={{ uri: userAvatar || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }} 
+                source={{ uri: userAvatar || 'https://api.dicebear.com/7.x/adventurer/png?seed=Felix&size=128' }} 
                 style={styles.avatar}
               />
             </View>
@@ -137,6 +137,8 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 4,
+    minWidth: 70,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
@@ -148,6 +150,8 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 70,
   },
   iconBtn: {
     marginRight: 10,

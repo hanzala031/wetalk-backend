@@ -17,9 +17,22 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#111827',
+        tabBarActiveTintColor: '#004D73',
+        tabBarInactiveTintColor: '#6B7280',
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarLabelStyle: {
+          fontFamily: 'Nunito-Bold',
+          fontSize: 12,
+        },
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB',
+          height: 62,
+          paddingBottom: 8,
+          paddingTop: 6,
+        },
       }}>
       <Tabs.Screen
         name="index"

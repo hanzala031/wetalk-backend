@@ -19,8 +19,9 @@ import { router } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiClient, authConfig, isNetworkError } from '@/lib/api-client';
-import lessonsData from '@/data/lessons.json';
+import { apiClient, authConfig, isNetworkError, getVisibleLessonsWithFallback } from '@/lib/api-client';
+import RewardPopup from '@/components/reward-popup';
+import WelcomeRewardModal from '@/components/welcome-reward-modal';
 
 const { width } = Dimensions.get('window');
 
@@ -61,92 +62,153 @@ const getLocalDateString = () => {
 };
 
 export default function DashboardScreen() {
-  const { userName, userAvatar, userToken } = useAuth();
+  const { userName, userAvatar, userToken, syncProgressToBackend } = useAuth();
   const [lessons, setLessons] = useState<any[]>([]);
   const [selectedPhase, setSelectedPhase] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [coins, setCoins] = useState<number>(0);
+  const [streak, setStreak] = useState<number>(0);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupRewards, setPopupRewards] = useState<any[]>([]);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const { t, language } = useLanguage();
 
   const loadData = async () => {
     try {
-      // 1. Fetch backend progress if token exists
-      let remoteCompleted: number[] = [];
-      let currentLessonNum = 1;
+      const allLessons = await getVisibleLessonsWithFallback(userToken);
+      const completedStr = await AsyncStorage.getItem('completed_lessons');
+      let localCompleted: number[] = completedStr ? JSON.parse(completedStr).map(Number) : [];
       
-      if (userToken) {
-        try {
-          const res = await apiClient.get('/user/sync', authConfig(userToken));
-          if (res.data?.success && res.data.progressData) {
-            const p = res.data.progressData;
-            if (p.completed_lessons) {
-              remoteCompleted = typeof p.completed_lessons === 'string' 
-                ? JSON.parse(p.completed_lessons) 
-                : (Array.isArray(p.completed_lessons) ? p.completed_lessons : []);
-            }
-          }
-          
-          // Also try to get current lesson status for lock logic
-          const lessonRes = await apiClient.get('/lessons/visible', authConfig(userToken));
-          if (Array.isArray(lessonRes.data)) {
-             // We can use this to find the current active lesson number
-             const activeLesson = lessonRes.data.find(l => l.status === 'active');
-             if (activeLesson) currentLessonNum = activeLesson.lessonNumber;
-          }
-        } catch (err) {
-          if (!isNetworkError(err)) {
-            console.warn('Backend sync failed:', err);
-          }
-        }
+      const today = getLocalDateString();
+      let currentLessonNum = 1;
+      const activeLesson = allLessons.find((l: any) => l.status === 'active');
+      if (activeLesson) {
+        currentLessonNum = Number(activeLesson.lessonNumber || activeLesson.lessonId || activeLesson.id || 1);
       }
 
-      // 2. Fetch local progress
-      const completedStr = await AsyncStorage.getItem('completed_lessons');
-      let localCompleted = completedStr ? JSON.parse(completedStr) : [];
-      
-      // Merge unique completed IDs
-      const mergedCompleted = Array.from(new Set([...localCompleted.map(Number), ...remoteCompleted.map(Number)]));
-      
-      // Sync merged back to local for offline use
-      await AsyncStorage.setItem('completed_lessons', JSON.stringify(mergedCompleted.map(String)));
-
-      const today = getLocalDateString();
-      const allLessons = lessonsData.lessons || [];
       const processedLessons = await Promise.all(allLessons.map(async (lesson: any, index: number) => {
-        const lessonNum = Number(lesson.id);
-        const isWordsCompleted = (await AsyncStorage.getItem(`completed_words_${lesson.id}`)) === 'true';
-        const isPracticeCompleted = (await AsyncStorage.getItem(`completed_practice_${lesson.id}`)) === 'true';
-        const isQuizCompleted = (await AsyncStorage.getItem(`completed_quiz_${lesson.id}`)) === 'true';
-        const isReviewCompleted = (await AsyncStorage.getItem(`completed_review_${lesson.id}`)) === 'true';
-        
-        const progress = (isWordsCompleted ? 25 : 0) + (isPracticeCompleted ? 25 : 0) + (isQuizCompleted ? 25 : 0) + (isReviewCompleted ? 25 : 0);
+        const rawId = String(lesson.id || lesson.lessonId || (index + 1));
+        const numId = Number(lesson.lessonNumber || lesson.lessonId || lesson.id || (index + 1));
+        const numStr = String(numId);
 
-        let status = 'locked';
-        if (mergedCompleted.includes(lessonNum)) {
-          status = 'completed';
-        } else if (lessonNum === currentLessonNum) {
-          status = 'active';
-        } else if (mergedCompleted.includes(Number(allLessons[index-1]?.id))) {
-          const prevLessonId = allLessons[index-1]?.id;
-          const completionDate = await AsyncStorage.getItem(`completion_date_${prevLessonId}`);
-          
-          if (!completionDate || completionDate !== today) {
+        const words = (await AsyncStorage.getItem(`completed_words_${rawId}`)) || (await AsyncStorage.getItem(`completed_words_${numStr}`));
+        const practice = (await AsyncStorage.getItem(`completed_practice_${rawId}`)) || (await AsyncStorage.getItem(`completed_practice_${numStr}`));
+        const quiz = (await AsyncStorage.getItem(`completed_quiz_${rawId}`)) || (await AsyncStorage.getItem(`completed_quiz_${numStr}`));
+        const review = (await AsyncStorage.getItem(`completed_review_${rawId}`)) || (await AsyncStorage.getItem(`completed_review_${numStr}`));
+        const finished = (await AsyncStorage.getItem(`lesson_finished_${rawId}`)) || (await AsyncStorage.getItem(`lesson_finished_${numStr}`));
+
+        const wordsDone = !!(lesson.userSteps?.learn || words === 'true');
+        const practiceDone = !!(lesson.userSteps?.practice || practice === 'true');
+        const quizDone = !!(lesson.userSteps?.quiz || quiz === 'true');
+        const reviewDone = !!(lesson.userSteps?.review || review === 'true' || finished === 'true');
+
+        const calculatedProgress = (wordsDone ? 25 : 0) + (practiceDone ? 25 : 0) + (quizDone ? 25 : 0) + (reviewDone ? 25 : 0);
+        
+        let status = lesson.status;
+        if (!userToken) {
+          status = 'locked';
+          if (localCompleted.includes(numId)) {
+            status = 'completed';
+          } else if (numId === currentLessonNum) {
             status = 'active';
-          } else {
-            status = 'locked';
+          } else if (localCompleted.includes(Number(allLessons[index-1]?.id || allLessons[index-1]?.lessonId))) {
+            const prevLessonId = allLessons[index-1]?.id;
+            const completionDate = await AsyncStorage.getItem(`completion_date_${prevLessonId}`);
+            if (!completionDate || completionDate !== today) {
+              status = 'active';
+            } else {
+              status = 'locked';
+            }
           }
         }
+
+        const backendProgress = lesson.progressPercentage !== undefined ? lesson.progressPercentage : (status === 'completed' ? 100 : 0);
+        const finalProgress = status === 'completed' ? 100 : Math.max(backendProgress, calculatedProgress);
 
         return {
           ...lesson,
-          displayTitle: lesson.title,
-          displayDesc: lesson.description,
+          displayTitle: lesson.title || `Lesson ${numId}`,
+          displayDesc: lesson.description || '',
           status,
-          progress: status === 'completed' ? 100 : progress,
+          progress: finalProgress,
+          timeRemaining: lesson.timeRemaining || null,
         };
       }));
 
       setLessons(processedLessons);
+
+      // Load and sync coins / streak
+      let localCoins = 0;
+      let localStreak = 0;
+      const statsStr = await AsyncStorage.getItem('user_stats');
+      if (statsStr) {
+        try {
+          const stats = JSON.parse(statsStr);
+          localCoins = stats.coins || 0;
+          localStreak = stats.streak || 0;
+        } catch (e) {
+          console.error('Error parsing user_stats in Dashboard:', e);
+        }
+      }
+
+      if (userToken) {
+        try {
+          const profileRes = await apiClient.get('/user/profile', authConfig(userToken, { timeout: 3000 }));
+          if (profileRes.data && profileRes.data.success && profileRes.data.user) {
+            const u = profileRes.data.user;
+            const backendCoins = u.wtCoins !== undefined ? u.wtCoins : (u.coins || 0);
+            const backendStreak = u.streak || 0;
+            
+            if (backendCoins !== localCoins || backendStreak !== localStreak) {
+              localCoins = Math.max(localCoins, backendCoins);
+              localStreak = Math.max(localStreak, backendStreak);
+              
+              const updatedStats = statsStr ? JSON.parse(statsStr) : { xp: 0, coins: 0, gems: 10, streak: 0 };
+              updatedStats.coins = localCoins;
+              updatedStats.streak = localStreak;
+              await AsyncStorage.setItem('user_stats', JSON.stringify(updatedStats));
+            }
+          }
+        } catch (e) {
+          console.log('Silent fail fetching profile in Dashboard:', e);
+        }
+      }
+
+      // Check for new user sign up welcome bonus
+      let isNewSignupPending = false;
+      try {
+        const isNewSignup = await AsyncStorage.getItem('is_new_user_signup');
+        if (isNewSignup === 'true') {
+          isNewSignupPending = true;
+          setShowWelcomeModal(true);
+          await AsyncStorage.removeItem('is_new_user_signup');
+        }
+      } catch (err) {
+        console.error('Error checking new user signup bonus:', err);
+      }
+
+      if (isNewSignupPending) {
+        localCoins = 0;
+      }
+
+      setCoins(localCoins);
+      setStreak(localStreak);
+
+      // Check for pending rewards
+      try {
+        const pendingStr = await AsyncStorage.getItem('pending_rewards');
+        if (pendingStr) {
+          const pending = JSON.parse(pendingStr);
+          if (Array.isArray(pending) && pending.length > 0) {
+            setPopupRewards(pending);
+            setPopupVisible(true);
+            await AsyncStorage.removeItem('pending_rewards');
+          }
+        }
+      } catch (err) {
+        console.error('Error loading pending rewards:', err);
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -171,6 +233,28 @@ export default function DashboardScreen() {
       return { uri: userAvatar };
     }
     return { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'User')}&background=004D73&color=fff` };
+  };
+
+  const handleClaimWelcomeBonus = async () => {
+    setShowWelcomeModal(false);
+    try {
+      const statsStr = await AsyncStorage.getItem('user_stats');
+      const stats = statsStr ? JSON.parse(statsStr) : { xp: 0, coins: 0, gems: 10, streak: 0 };
+      const updatedCoins = 50; // New user sign up bonus is exactly 50 WT Coins
+      stats.coins = updatedCoins;
+      await AsyncStorage.setItem('user_stats', JSON.stringify(stats));
+      setCoins(updatedCoins);
+
+      if (userToken) {
+        apiClient.put('/user/profile', { wtCoins: updatedCoins }, authConfig(userToken)).catch(() => {});
+        if (syncProgressToBackend) {
+          syncProgressToBackend();
+        }
+      }
+    } catch (e) {
+      console.error('Error claiming welcome bonus:', e);
+      setCoins(50);
+    }
   };
 
   return (
@@ -203,7 +287,7 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
         </View>
- 
+
         <ScrollView 
           showsVerticalScrollIndicator={false} 
           contentContainerStyle={styles.scrollContent}
@@ -213,16 +297,36 @@ export default function DashboardScreen() {
           <View style={styles.heroSection}>
             <Text style={styles.welcomeTitle} numberOfLines={1}>{t('welcome_title')}</Text>
             <Text style={styles.welcomeSubtitle}>{t('welcome_subtitle')}</Text>
-            <TouchableOpacity 
-              style={styles.streakBadge}
-              activeOpacity={0.85}
-              onPress={() => router.push('/streak')}
-            >
-              <Text style={styles.streakEmoji}>🔥</Text>
-              <Text style={styles.streakText}>Daily Streak</Text>
-            </TouchableOpacity>
+            
+            <View style={styles.badgesRow}>
+              <TouchableOpacity 
+                style={styles.streakBadge}
+                activeOpacity={0.85}
+                onPress={() => router.push('/streak')}
+              >
+                <Text style={styles.streakEmoji}>🔥</Text>
+                <Text style={styles.streakText}>
+                  {streak > 0 ? `${streak} Day Streak` : 'Daily Streak'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.streakBadge}
+                activeOpacity={0.85}
+                onPress={() => router.push('/wt-coin-details')}
+              >
+                <Image 
+                  source={{ uri: 'https://res.cloudinary.com/dgedsmawq/image/upload/v1785220344/WT_Coin_udvbma.png' }}
+                  style={styles.coinImageBadge}
+                  contentFit="contain"
+                />
+                <Text style={styles.streakText}>
+                  {coins.toLocaleString()} WT Coins
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
- 
+
           {/* AI Tutor Card */}
           <View style={styles.aiTutorCard}>
             <View style={styles.aiTutorContent}>
@@ -230,7 +334,7 @@ export default function DashboardScreen() {
               <Text style={styles.aiTutorDesc} numberOfLines={2}>{t('ai_tutor_desc')}</Text>
               <TouchableOpacity 
                 style={styles.chatNowBtn}
-                onPress={() => router.push('/unlimited-talk')}
+                onPress={() => router.push('/(tabs)/practice')}
               >
                 <Text style={styles.chatNowText}>{t('chat_now')}</Text>
               </TouchableOpacity>
@@ -241,7 +345,7 @@ export default function DashboardScreen() {
               contentFit="contain"
             />
           </View>
- 
+
            {/* Lessons Section Header */}
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t('your_lessons')}</Text>
@@ -270,21 +374,23 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             ))}
           </View>
- 
+
           {/* Lessons List */}
           {loading ? (
             <ActivityIndicator size="large" color={PRIMARY_BLUE} style={{ marginTop: 20 }} />
           ) : (
             lessons
               .filter(l => l.phase === selectedPhase)
-              .map((lesson) => {
+              .map((lesson, idx) => {
                 const isActive = lesson.status === 'active' || lesson.status === 'completed';
                 const isLocked = lesson.status === 'locked';
                 const progress = lesson.progress;
+                const uniqueId = lesson.id && lesson.id !== 'undefined' && lesson.id !== 'null' ? lesson.id : (lesson.lessonId || (idx + 1));
+                const itemKey = `lesson_card_${selectedPhase}_${uniqueId}_${idx}`;
                 
                 return (
                   <TouchableOpacity 
-                    key={lesson.id} 
+                    key={itemKey} 
                     style={[
                       styles.lessonCard, 
                       { borderLeftColor: isActive ? PRIMARY_BLUE : '#94A3B8' }
@@ -342,6 +448,16 @@ export default function DashboardScreen() {
           )}
         </ScrollView>
       </SafeAreaView>
+      <RewardPopup 
+        visible={popupVisible} 
+        rewards={popupRewards} 
+        onClose={() => setPopupVisible(false)} 
+      />
+      <WelcomeRewardModal 
+        visible={showWelcomeModal} 
+        onClose={handleClaimWelcomeBonus} 
+        coinsAmount={50} 
+      />
     </View>
   );
 }
@@ -440,6 +556,12 @@ const styles = StyleSheet.create({
     color: '#4B5563',
     marginTop: 4,
   },
+  badgesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    alignSelf: 'flex-start',
+  },
   streakBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -454,12 +576,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 5,
     elevation: 2,
-    marginTop: 12,
-    alignSelf: 'flex-start',
+    marginRight: 10,
   },
   streakEmoji: {
     fontSize: 14,
     marginRight: 4,
+  },
+  coinImageBadge: {
+    width: 24,
+    height: 24,
+    marginRight: 6,
   },
   streakText: {
     fontSize: 13,

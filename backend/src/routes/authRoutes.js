@@ -12,4 +12,9 @@ router.post('/login', authController.login);
 // Google OAuth
 router.post('/google', authController.googleAuth);
 
+// Password Reset Request
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/verify-otp', authController.verifyOtp);
+router.post('/reset-password', authController.resetPassword);
+
 module.exports = router;

@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Speech from 'expo-speech';
-import { API_URL } from '@/constants/api';
+import { apiClient } from '@/lib/api-client';
 import { tutorStore } from '@/lib/tutor-store';
 
 const { width } = Dimensions.get('window');
@@ -138,13 +138,8 @@ export default function UnlimitedTalk() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
 
     try {
-      const response = await fetch(`${API_URL}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMsgText }),
-      });
-
-      const data = await response.json();
+      const response = await apiClient.post('/chat', { message: userMsgText });
+      const data = response.data;
       const aiMsgText =
         data.reply || 'I am here to practice English with you! Let me know how I can help.';
 

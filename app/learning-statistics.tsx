@@ -115,8 +115,8 @@ export default function LearningStatistics() {
             { day: 'Sat', value: 0 }, { day: 'Sun', value: 0 }
         ]);
       }
-    } catch (error) {
-      if (!isNetworkError(error)) {
+    } catch (error: any) {
+      if (!isNetworkError(error) && error?.response?.status !== 401) {
         console.warn('Error fetching stats:', error);
       }
     }

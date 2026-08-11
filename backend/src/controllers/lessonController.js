@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Lesson = require('../models/Lesson');
 const UserProgress = require('../models/UserProgress');
 const UserStreak = require('../models/UserStreak');
+const coinHelper = require('../utils/coinHelper');
 
 // Helper to get remaining time for time-lock
 const getRemainingTime = (lastCompletedAt) => {
@@ -30,12 +31,13 @@ const getRemainingTime = (lastCompletedAt) => {
 // @access  Private
 const getCurrentLesson = async (req, res) => {
   try {
-    let progress = await UserProgress.findOne({ userId: req.user.id });
+    const targetUserId = req.user._id || req.user.id;
+    let progress = await UserProgress.findOne({ userId: targetUserId });
     
     // If progress doesn't exist, initialize it
     if (!progress) {
       progress = await UserProgress.create({
-        userId: req.user.id,
+        userId: targetUserId,
         currentLessonNumber: 1,
         completedLessons: [],
         steps: { learn: false, practice: false, quiz: false, review: false },
@@ -92,6 +94,7 @@ const getCurrentLesson = async (req, res) => {
 // @access  Private
 const completeStep = async (req, res) => {
   const { lessonNumber, stepName } = req.body;
+  let rewardsEarned = [];
 
   if (!lessonNumber || !stepName) {
     return res.status(400).json({ success: false, message: 'Please provide lessonNumber and stepName' });
@@ -103,11 +106,12 @@ const completeStep = async (req, res) => {
   }
 
   try {
-    let progress = await UserProgress.findOne({ userId: req.user.id });
+    const targetUserId = req.user._id || req.user.id;
+    let progress = await UserProgress.findOne({ userId: targetUserId });
 
     if (!progress) {
       progress = await UserProgress.create({
-        userId: req.user.id,
+        userId: targetUserId,
         currentLessonNumber: 1,
         completedLessons: [],
         steps: { learn: false, practice: false, quiz: false, review: false },
@@ -170,7 +174,7 @@ const completeStep = async (req, res) => {
       };
 
       // Award profile XP and Gems, and sync with UserStreak and progressData
-      const user = await User.findById(req.user.id);
+      const user = req.user;
       if (user) {
         // 1. Update User Stats
         user.xp = (user.xp || 0) + 100;
@@ -199,7 +203,13 @@ const completeStep = async (req, res) => {
         user.markModified('progressData');
         await user.save();
 
-        // 3. Update UserStreak model
+        // 3. Award WT Coins rewards (Lesson & Module Completed)
+        const rewards = await coinHelper.awardLessonAndModuleRewards(user, lessonNumber, progress.completedLessons);
+        if (rewards && rewards.length > 0) {
+          rewardsEarned.push(...rewards);
+        }
+
+        // 4. Update UserStreak model
         let streak = await UserStreak.findOne({ userId: user._id });
         if (!streak) {
           streak = new UserStreak({ userId: user._id });
@@ -228,6 +238,12 @@ const completeStep = async (req, res) => {
               streak.currentStreak = 1;
             }
             streak.lastActiveDate = new Date();
+
+            // 5. Award 7-Day Streak Milestone Reward
+            const streakReward = await coinHelper.awardStreakReward(user, streak.currentStreak);
+            if (streakReward) {
+              rewardsEarned.push(streakReward);
+            }
           }
         }
         await streak.save();
@@ -242,7 +258,8 @@ const completeStep = async (req, res) => {
         ? `Congratulations! Lesson ${lessonNumber} is fully completed. Next lesson will unlock in 24 hours.`
         : `Step ${stepName} completed successfully.`,
       isLessonFullyCompleted,
-      progress
+      progress,
+      rewardsEarned
     });
 
   } catch (error) {
@@ -256,10 +273,11 @@ const completeStep = async (req, res) => {
 // @desc    Get visible lessons for the current user
 const getVisibleLessons = async (req, res) => {
   try {
-    let progress = await UserProgress.findOne({ userId: req.user.id });
+    const targetUserId = req.user._id || req.user.id;
+    let progress = await UserProgress.findOne({ userId: targetUserId });
     if (!progress) {
       progress = await UserProgress.create({
-        userId: req.user.id,
+        userId: targetUserId,
         currentLessonNumber: 1,
         completedLessons: [],
         steps: { learn: false, practice: false, quiz: false, review: false },
@@ -268,15 +286,26 @@ const getVisibleLessons = async (req, res) => {
     }
 
     const allLessons = await Lesson.find().sort({ lessonNumber: 1 });
-    
+    const lockStatus = progress.lastCompletedAt ? getRemainingTime(progress.lastCompletedAt) : { isLocked: false };
+
     const visibleLessons = allLessons.map((lesson) => {
+      const isCompleted = (progress.completedLessons || []).includes(lesson.lessonNumber);
+      const isCurrent = lesson.lessonNumber === progress.currentLessonNumber;
+      const isUnlocked = isCompleted || (isCurrent && !lockStatus.isLocked);
+
       let status = 'locked';
-      if (progress.completedLessons.includes(lesson.lessonNumber)) {
+      if (isCompleted) {
         status = 'completed';
-      } else if (lesson.lessonNumber === progress.currentLessonNumber) {
-        status = 'active';
-      } else if (lesson.lessonNumber === progress.currentLessonNumber + 1) {
-        status = 'next_locked';
+      } else if (isCurrent) {
+        status = lockStatus.isLocked ? 'locked' : 'active';
+      }
+
+      let progressPercentage = 0;
+      if (isCompleted) {
+        progressPercentage = 100;
+      } else if (isCurrent) {
+        const s = progress.steps || {};
+        progressPercentage = (s.learn ? 25 : 0) + (s.practice ? 25 : 0) + (s.quiz ? 25 : 0) + (s.review ? 25 : 0);
       }
 
       return {
@@ -284,7 +313,11 @@ const getVisibleLessons = async (req, res) => {
         lessonNumber: lesson.lessonNumber,
         title: lesson.title,
         description: lesson.description,
-        status
+        isUnlocked,
+        isCompleted,
+        progressPercentage,
+        status,
+        timeRemaining: isCurrent && lockStatus.isLocked ? lockStatus.remainingStr : null
       };
     });
 
@@ -306,15 +339,40 @@ const getLessonById = async (req, res) => {
       return res.status(404).json({ message: 'Lesson not found' });
     }
 
-    const progress = await UserProgress.findOne({ userId: req.user.id });
-    const isUnlocked = lessonNum <= (progress ? progress.currentLessonNumber : 1);
+    const targetUserId = req.user._id || req.user.id;
+    let progress = await UserProgress.findOne({ userId: targetUserId });
+    if (!progress) {
+      progress = await UserProgress.create({
+        userId: targetUserId,
+        currentLessonNumber: 1,
+        completedLessons: [],
+        steps: { learn: false, practice: false, quiz: false, review: false },
+        lastCompletedAt: null
+      });
+    }
 
-    if (!isUnlocked) {
-      return res.status(403).json({ message: 'This lesson is locked' });
+    const isCompleted = (progress.completedLessons || []).includes(lessonNum);
+    const isCurrent = lessonNum === progress.currentLessonNumber;
+    const isUnlocked = isCompleted || isCurrent;
+
+    let userSteps = { learn: false, practice: false, quiz: false, review: false };
+    if (isCompleted) {
+      userSteps = { learn: true, practice: true, quiz: true, review: true };
+    } else if (isCurrent && progress.steps) {
+      userSteps = {
+        learn: !!progress.steps.learn,
+        practice: !!progress.steps.practice,
+        quiz: !!progress.steps.quiz,
+        review: !!progress.steps.review
+      };
     }
 
     res.json({
       id: `lesson_${lesson.lessonNumber}`,
+      userSteps,
+      isCompleted,
+      isCurrent,
+      isUnlocked,
       ...lesson.toObject()
     });
   } catch (error) {
@@ -329,10 +387,11 @@ const completeLesson = async (req, res) => {
   const lessonNum = Number(idParts[1] || lessonId);
 
   try {
-    let progress = await UserProgress.findOne({ userId: req.user.id });
+    const targetUserId = req.user._id || req.user.id;
+    let progress = await UserProgress.findOne({ userId: targetUserId });
     if (!progress) {
       progress = await UserProgress.create({
-        userId: req.user.id,
+        userId: targetUserId,
         currentLessonNumber: 1,
         completedLessons: [],
         steps: { learn: false, practice: false, quiz: false, review: false },
@@ -347,11 +406,23 @@ const completeLesson = async (req, res) => {
         progress.currentLessonNumber += 1;
       }
       await progress.save();
+
+      // Award rewards for compatibility/legacy complete
+      const user = req.user;
+      if (user) {
+        const rewards = await coinHelper.awardLessonAndModuleRewards(user, lessonNum, progress.completedLessons);
+        return res.json({
+          message: 'Lesson completed successfully',
+          progress,
+          rewardsEarned: rewards || []
+        });
+      }
     }
 
     res.json({
       message: 'Lesson completed successfully',
-      progress
+      progress,
+      rewardsEarned: []
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

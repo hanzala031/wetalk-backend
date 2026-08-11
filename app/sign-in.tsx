@@ -21,6 +21,7 @@ import { apiClient } from '@/lib/api-client';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import { useGoogleAuth } from '@/hooks/use-google-auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -40,7 +41,7 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { login } = useAuth();
   const { t } = useLanguage();
   const { signInWithGoogle, isGoogleLoading } = useGoogleAuth();
   const insets = useSafeAreaInsets();
@@ -53,20 +54,13 @@ export default function SignInScreen() {
 
     setIsLoading(true);
     try {
-      const response = await apiClient.post('/auth/login', {
-        email: email,
-        password: password
-      });
-
-      if (response.data.success) {
-        const { token, user } = response.data;
-        await signIn(token, user);
-      } else {
-        Alert.alert('Login Failed', response.data.message || 'Invalid credentials');
+      const data = await login(email.trim().toLowerCase(), password);
+      if (!data.success) {
+        Alert.alert('Login Failed', data.message || 'Invalid credentials');
       }
     } catch (error: any) {
       console.error("Login error:", error.response?.data || error.message);
-      const errorMessage = error.response?.data?.message || 'Server connection error. Please make sure your backend is running.';
+      const errorMessage = error.response?.data?.message || error.message || 'Server connection error. Please make sure your backend is running.';
       Alert.alert('Login Error', errorMessage);
     } finally {
       setIsLoading(false);
@@ -124,7 +118,10 @@ export default function SignInScreen() {
                 placeholder={t('email_address')}
                 placeholderTextColor="#9CA3AF"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  AsyncStorage.setItem('lastUserEmail', text.trim().toLowerCase());
+                }}
                 autoCapitalize="none"
                 keyboardType="email-address"
               />
@@ -168,7 +165,10 @@ export default function SignInScreen() {
                 <ThemedText style={styles.rememberMeText}>Remember me</ThemedText>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.forgotPasswordButton}>
+              <TouchableOpacity 
+                style={styles.forgotPasswordButton}
+                onPress={() => router.push({ pathname: '/forgot-password', params: { email } })}
+              >
                 <ThemedText style={styles.forgotPasswordText}>{t('forgot_password')}</ThemedText>
               </TouchableOpacity>
             </View>
@@ -253,8 +253,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   logoIconImage: {
-    width: 120,
-    height: 120,
+    width: 90,
+    height: 90,
     marginTop: -5,
     marginBottom: -5,
   },

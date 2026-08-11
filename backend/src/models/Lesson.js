@@ -79,7 +79,7 @@ const lessonSchema = new mongoose.Schema({
     type: [quizQuestionSchema],
     validate: [arrayLimit, 'Quiz must have exactly 5 questions']
   }
-}, { timestamps: true });
+}, { timestamps: true, bufferCommands: false });
 
 function arrayLimit(val) {
   return val.length === 5;

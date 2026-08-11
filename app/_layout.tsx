@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import '../global.css';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   useFonts,
   Nunito_400Regular,
@@ -25,14 +25,14 @@ import { AuthProvider, useAuth } from '@/context/auth-context';
 import { LanguageProvider } from '@/context/language-context';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export const unstable_settings = {
   anchor: 'index',
 };
 
 function RootNavigation() {
-  const { userToken, isLoading } = useAuth();
+  const { userToken, isProfileCompleted, isLoading } = useAuth();
   const segments = useSegments();
 
   useEffect(() => {
@@ -41,16 +41,28 @@ function RootNavigation() {
     const firstSegment = segments[0] as string | undefined;
     const inAuthGroup = firstSegment === '(tabs)';
     const inSignGroup = firstSegment === 'sign-in' || firstSegment === 'sign-up';
-    const isIndex = !segments || (segments as any).length === 0 || firstSegment === 'index' || firstSegment === '(auth)'; // Adjust based on your index
+    const isProfileSetup = firstSegment === 'profile-setup';
 
-    if (!userToken && inAuthGroup) {
-      // Redirect to sign-in if not logged in and trying to access tabs
-      router.replace('/sign-in');
-    } else if (userToken && (inSignGroup || firstSegment === undefined || firstSegment === 'index' || firstSegment?.startsWith('onboarding'))) {
-      // Redirect to tabs if logged in and trying to access sign-in, sign-up, or onboarding
-      router.replace('/(tabs)');
+    if (!userToken) {
+      // Redirect to sign-in if not logged in and trying to access private stacks
+      if (inAuthGroup || isProfileSetup || firstSegment === 'welcome') {
+        router.replace('/sign-in');
+      }
+    } else {
+      // Authenticated
+      if (!isProfileCompleted) {
+        // Strict guard: Authenticated but profile is NOT completed -> Render profile-setup or welcome
+        if (firstSegment !== 'profile-setup' && firstSegment !== 'welcome') {
+          router.replace('/profile-setup');
+        }
+      } else {
+        // Authenticated and profile is completed -> Render Main App Stack
+        if (inSignGroup || firstSegment === undefined || firstSegment === 'index' || isProfileSetup || firstSegment === 'welcome' || firstSegment?.startsWith('onboarding')) {
+          router.replace('/(tabs)');
+        }
+      }
     }
-  }, [userToken, isLoading, segments]);
+  }, [userToken, isProfileCompleted, isLoading, segments]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -65,6 +77,8 @@ function RootNavigation() {
       <Stack.Screen name="onboarding-placement" options={{ headerShown: false }} />
       <Stack.Screen name="sign-up" options={{ headerShown: false }} />
       <Stack.Screen name="sign-in" options={{ headerShown: false }} />
+      <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+      <Stack.Screen name="reset-password" options={{ headerShown: false }} />
       <Stack.Screen name="profile-setup" options={{ headerShown: false }} />
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="lesson-details" options={{ headerShown: false }} />
@@ -72,6 +86,10 @@ function RootNavigation() {
       <Stack.Screen name="lesson-completion" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="change-tutor" options={{ headerShown: false }} />
+      <Stack.Screen name="buy-wt-coins" options={{ headerShown: false }} />
+      <Stack.Screen name="redeem-wt-coins" options={{ headerShown: false }} />
+      <Stack.Screen name="pay-with-visa" options={{ headerShown: false }} />
+      <Stack.Screen name="pay-with-paypal" options={{ headerShown: false }} />
       <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
     </Stack>
   );
@@ -90,13 +108,23 @@ export default function RootLayout() {
     'Inter-Bold': Inter_700Bold,
   });
 
+  const [fontTimeoutPassed, setFontTimeoutPassed] = useState(false);
+
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setFontTimeoutPassed(true);
+      SplashScreen.hideAsync().catch(() => {});
+    }, 800);
+
     if (loaded || error) {
-      SplashScreen.hideAsync();
+      clearTimeout(timer);
+      SplashScreen.hideAsync().catch(() => {});
     }
+
+    return () => clearTimeout(timer);
   }, [loaded, error]);
 
-  if (!loaded && !error) {
+  if (!loaded && !error && !fontTimeoutPassed) {
     return null;
   }
 

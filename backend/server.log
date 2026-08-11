@@ -1,0 +1,5 @@
+Server is running on http://0.0.0.0:5000
+API available at http://192.168.18.27:5000/api
+API available at http://192.168.137.1:5000/api
+Connecting to MongoDB Atlas...
+[MongoDB] Successfully connected to Atlas: ac-1x9jylg-shard-00-01.yt9ptue.mongodb.net

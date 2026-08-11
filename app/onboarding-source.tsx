@@ -1,5 +1,12 @@
 import { OnboardingSourceScreen } from '@/components/onboarding-source-screen';
+import { StatusBar } from 'react-native';
 
 export default function OnboardingSource() {
-  return <OnboardingSourceScreen />;
+  return (
+    <>
+      <StatusBar barStyle="dark-content" />
+      <OnboardingSourceScreen />
+    </>
+  );
 }
+

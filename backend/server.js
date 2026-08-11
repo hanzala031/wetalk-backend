@@ -1,3 +1,21 @@
+// Ensure console logs are flushed immediately on Windows when redirected to log files
+const fs = require('fs');
+const util = require('util');
+console.log = (...args) => {
+  try {
+    fs.writeSync(1, util.format(...args) + '\n');
+  } catch (e) {
+    process.stdout.write(util.format(...args) + '\n');
+  }
+};
+console.error = (...args) => {
+  try {
+    fs.writeSync(2, util.format(...args) + '\n');
+  } catch (e) {
+    process.stderr.write(util.format(...args) + '\n');
+  }
+};
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -5,9 +23,6 @@ const connectDB = require('./src/config/db');
 
 // Load environment variables
 dotenv.config();
-
-// Connect to MongoDB Database
-connectDB();
 
 const app = express();
 
@@ -28,6 +43,7 @@ app.use('/api/chat', require('./src/routes/chatRoutes'));
 app.use('/api/lessons', require('./src/routes/lessonRoutes'));
 app.use('/api/user', require('./src/routes/userRoutes'));
 app.use('/api/streak', require('./src/routes/streakRoutes'));
+app.use('/api/practice', require('./src/routes/practiceRoutes'));
 
 // Health check route
 app.get('/health', (req, res) => {
@@ -72,4 +88,6 @@ app.listen(PORT, '0.0.0.0', () => {
   getLanAddresses().forEach((address) => {
     console.log(`API available at http://${address}:${PORT}/api`);
   });
+  // Connect to MongoDB in the background after the server is listening
+  connectDB();
 });

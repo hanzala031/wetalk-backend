@@ -10,6 +10,7 @@ import {
   TextInput,
   Dimensions,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -20,6 +21,25 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { API_URL } from '@/constants/api';
 import { apiClient, authConfig } from '@/lib/api-client';
+import { Buffer } from 'buffer';
+
+const getUserIdFromToken = (token: string | null): string => {
+  if (!token) return '';
+  try {
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      const payloadB64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const decoded = typeof atob !== 'undefined'
+        ? atob(payloadB64)
+        : Buffer.from(payloadB64, 'base64').toString('utf-8');
+      const payload = JSON.parse(decoded);
+      return payload.id || '';
+    }
+  } catch (e) {
+    console.error('Error decoding token:', e);
+  }
+  return '';
+};
 
 const { width } = Dimensions.get('window');
 
@@ -57,7 +77,7 @@ export default function EditProfileScreen() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -84,16 +104,39 @@ export default function EditProfileScreen() {
 
       // Check if it's a local uri/base64 that needs to be uploaded
       if (avatarUri && (avatarUri.startsWith('file://') || avatarUri.startsWith('content://') || !avatarUri.startsWith('http'))) {
-        if (avatarBase64) {
-          const base64Data = `data:image/jpeg;base64,${avatarBase64}`;
-          
-          const uploadResponse = await apiClient.post('/user/upload-image', {
-            base64Data: base64Data,
-          });
+        const userId = getUserIdFromToken(userToken);
+        if (!userId) {
+          alert('User session expired. Please sign in again.');
+          setIsSaving(false);
+          return;
+        }
 
-          if (uploadResponse.data?.success && uploadResponse.data?.secure_url) {
-            finalAvatarUrl = uploadResponse.data.secure_url;
-          }
+        const uriParts = avatarUri.split('.');
+        const fileType = uriParts[uriParts.length - 1] || 'jpeg';
+        const fileName = avatarUri.split('/').pop() || `profile_image.${fileType}`;
+
+        const formData = new FormData();
+        formData.append('file', {
+          uri: Platform.OS === 'ios' ? avatarUri.replace('file://', '') : avatarUri,
+          name: fileName,
+          type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
+        } as any);
+
+        const uploadResponse = await apiClient.post(
+          `/user/upload-profile/${userId}`,
+          formData,
+          authConfig(userToken, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+        );
+
+        if (uploadResponse.data?.success && uploadResponse.data?.profilePicUrl) {
+          finalAvatarUrl = uploadResponse.data.profilePicUrl;
+          setAvatarUri(finalAvatarUrl);
+        } else {
+          throw new Error(uploadResponse.data?.message || 'Failed to upload profile picture');
         }
       }
 

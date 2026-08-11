@@ -3,6 +3,7 @@ import { API_URL } from '@/constants/api';
 import lessonsData from '@/data/lessons.json';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 const API_PORT = '5000';
 
@@ -18,6 +19,13 @@ function getExpoDevHost(): string | null {
   }
 
   return hostUri.split(':')[0] || null;
+}
+
+function isValidCandidate(url: string): boolean {
+  if (__DEV__) return true;
+  // In production/preview builds, exclude local loopbacks as mobile devices cannot reach them
+  const lowerUrl = url.toLowerCase();
+  return !lowerUrl.includes('localhost') && !lowerUrl.includes('127.0.0.1') && !lowerUrl.includes('10.0.2.2');
 }
 
 let baseUrlResolved = false;
@@ -75,8 +83,8 @@ async function discoverBaseUrl(): Promise<string> {
   candidates.push('http://127.0.0.1:5000/api');
   candidates.push('http://10.0.2.2:5000/api');
 
-  // De-duplicate
-  const uniqueCandidates = Array.from(new Set(candidates));
+  // De-duplicate and filter out invalid loopbacks in production
+  const uniqueCandidates = Array.from(new Set(candidates)).filter(isValidCandidate);
 
   // Probe all candidates in parallel with 4000ms timeout
   const probes = uniqueCandidates.map(async (url) => {
@@ -237,6 +245,22 @@ apiClient.interceptors.request.use(async (config) => {
     const workingUrl = await resolvePromise;
     config.baseURL = workingUrl;
   }
+
+  // Automatically attach Authorization: Bearer <token> header if a token exists in SecureStore
+  try {
+    const token = await SecureStore.getItemAsync('userToken');
+    if (token) {
+      if (!config.headers) {
+        config.headers = {} as any;
+      }
+      if (!config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+  } catch (err) {
+    console.warn('[API] Failed to attach SecureStore userToken in interceptor:', err);
+  }
+
   return config;
 }, (error) => {
   return Promise.reject(error);
@@ -277,7 +301,9 @@ apiClient.interceptors.response.use(
   async (error) => {
     // If the request failed because the server is unreachable (Network Error)
     if (isNetworkError(error)) {
-      console.warn(`[API] Network error: backend unreachable. Serving mock fallback for: ${error.config?.url || 'unknown'}`);
+      const urlPath = error.config?.url || '';
+      const attemptedUrl = `${error.config?.baseURL || ''}${urlPath}`;
+      console.warn(`[API] Network error: backend unreachable. Failed to connect to ${attemptedUrl}. Message: ${error.message || 'No response from server.'}`);
       
       // Auto-trigger URL re-discovery in background if we hit a network error,
       // in case the backend server IP changed.
@@ -290,12 +316,16 @@ apiClient.interceptors.response.use(
         }).catch(() => {});
       }
 
-      // CRITICAL: Do NOT return mock responses (like empty `{}`) for the sync endpoint
-      // because returning an empty successful sync response triggers the client
-      // to wipe the user's progress!
-      const isSyncRoute = error.config?.url?.endsWith('/user/sync');
-      if (isSyncRoute) {
-        return Promise.reject(error);
+      // CRITICAL: Do NOT return mock responses for auth and sync routes.
+      // Propagate the network error so the user gets detailed feedback.
+      const isAuthRoute = urlPath.includes('/auth/');
+      const isSyncRoute = urlPath.endsWith('/user/sync');
+      
+      if (isAuthRoute || isSyncRoute) {
+        const enhancedError = new Error(`Connection failed to ${attemptedUrl}. Details: ${error.message || 'Network Error'}`);
+        Object.defineProperty(enhancedError, 'isNetworkError', { value: true, enumerable: true });
+        Object.defineProperty(enhancedError, 'config', { value: error.config, enumerable: true });
+        return Promise.reject(enhancedError);
       }
 
       const mockData = getMockResponse(error.config?.url, error.config?.data);
@@ -306,6 +336,29 @@ apiClient.interceptors.response.use(
         headers: {},
         config: error.config,
       });
+    }
+
+    if (axios.isAxiosError(error)) {
+      const urlPath = error.config?.url || '';
+      const isLoginOrSignup = urlPath.includes('/auth/login') || urlPath.includes('/auth/signup');
+      if (error.response?.status === 401 && !isLoginOrSignup) {
+        console.warn('[API] 401 Unauthorized response received. Clearing local session...');
+        try {
+          const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+          const { router } = require('expo-router');
+          
+          // Clear keys asynchronously
+          SecureStore.deleteItemAsync('userToken');
+          SecureStore.deleteItemAsync('userName');
+          SecureStore.deleteItemAsync('userAvatar');
+          SecureStore.deleteItemAsync('userEmail');
+          AsyncStorage.clear().catch(() => {});
+          
+          router.replace('/sign-in');
+        } catch (err) {
+          console.error('Error during auto-logout on 401:', err);
+        }
+      }
     }
 
     return Promise.reject(error);
@@ -336,7 +389,7 @@ export async function checkBackendHealth(): Promise<boolean> {
       'http://192.168.18.101:5000/api',
       'http://127.0.0.1:5000/api',
       'http://localhost:5000/api'
-    ].filter(Boolean) as string[];
+    ].filter(Boolean).filter((url) => isValidCandidate(url as string)) as string[];
 
     for (const activeUrl of candidateUrls) {
       try {

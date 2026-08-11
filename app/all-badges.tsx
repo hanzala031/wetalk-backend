@@ -168,7 +168,7 @@ export default function AllBadgesScreen() {
         setProgressData({});
         return;
       }
-      const config = authConfig(userToken, { timeout: 10000 });
+      const config = authConfig(userToken, { timeout: 3000 });
       const [streakRes, syncRes] = await Promise.all([
         apiClient.get('/streak/status', config),
         apiClient.get('/user/sync', config)

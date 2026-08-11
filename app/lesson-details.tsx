@@ -14,9 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import lessonsData from '@/data/lessons.json';
 import { useAuth } from '@/context/auth-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { getLessonWithFallback } from '@/lib/api-client';
 
 const LESSON_IMAGES: Record<number, any> = {
   1: require('../assets/images/lesson_1.png'),
@@ -51,7 +51,7 @@ const LIGHT_BLUE = '#E8EFFF';
 
 export default function LessonDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { userName, userAvatar } = useAuth();
+  const { userName, userAvatar, userToken } = useAuth();
   const [lesson, setLesson] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isWordsCompleted, setIsWordsCompleted] = useState(false);
@@ -61,21 +61,21 @@ export default function LessonDetailsScreen() {
 
   useEffect(() => {
     loadLessonData();
-    checkCompletion();
-  }, [id]);
+  }, [id, userToken]);
 
   const checkCompletion = async () => {
     try {
-      const words = await AsyncStorage.getItem(`completed_words_${id}`);
-      const practice = await AsyncStorage.getItem(`completed_practice_${id}`);
-      const quiz = await AsyncStorage.getItem(`completed_quiz_${id}`);
-      const review = await AsyncStorage.getItem(`completed_review_${id}`);
-      const finished = await AsyncStorage.getItem(`lesson_finished_${id}`);
+      const activeId = id || '1';
+      const words = await AsyncStorage.getItem(`completed_words_${activeId}`);
+      const practice = await AsyncStorage.getItem(`completed_practice_${activeId}`);
+      const quiz = await AsyncStorage.getItem(`completed_quiz_${activeId}`);
+      const review = await AsyncStorage.getItem(`completed_review_${activeId}`);
+      const finished = await AsyncStorage.getItem(`lesson_finished_${activeId}`);
       
-      setIsWordsCompleted(words === 'true');
-      setIsPracticeCompleted(practice === 'true');
-      setIsQuizCompleted(quiz === 'true');
-      setIsReviewCompleted(review === 'true' || finished === 'true');
+      if (words === 'true') setIsWordsCompleted(true);
+      if (practice === 'true') setIsPracticeCompleted(true);
+      if (quiz === 'true') setIsQuizCompleted(true);
+      if (review === 'true' || finished === 'true') setIsReviewCompleted(true);
     } catch (e) {
       console.error(e);
     }
@@ -83,19 +83,36 @@ export default function LessonDetailsScreen() {
 
   const loadLessonData = async () => {
     try {
-      const allLessons = lessonsData.lessons || [];
-      const foundLesson = allLessons.find(l => l.id === id);
+      const activeId = id || '1';
+      const foundLesson = await getLessonWithFallback(activeId, userToken);
       
       if (foundLesson) {
-        const index = allLessons.indexOf(foundLesson);
+        const titleStr = foundLesson.title || foundLesson.displayTitle || `Lesson ${foundLesson.lessonNumber || foundLesson.lessonId || activeId || '1'}`;
+        const descStr = foundLesson.description || foundLesson.displayDesc || '';
         const processedLesson = {
           ...foundLesson,
-          displayTitle: foundLesson.title,
-          displayDesc: foundLesson.description,
-          lessonNumber: index + 1,
+          lessonNumber: foundLesson.lessonNumber || foundLesson.lessonId || Number(activeId) || 1,
+          displayTitle: titleStr,
+          displayDesc: descStr,
           progress: 0,
         };
         setLesson(processedLesson);
+
+        const words = await AsyncStorage.getItem(`completed_words_${activeId}`);
+        const practice = await AsyncStorage.getItem(`completed_practice_${activeId}`);
+        const quiz = await AsyncStorage.getItem(`completed_quiz_${activeId}`);
+        const review = await AsyncStorage.getItem(`completed_review_${activeId}`);
+        const finished = await AsyncStorage.getItem(`lesson_finished_${activeId}`);
+
+        const wordsDone = !!(foundLesson.userSteps?.learn || words === 'true');
+        const practiceDone = !!(foundLesson.userSteps?.practice || practice === 'true');
+        const quizDone = !!(foundLesson.userSteps?.quiz || quiz === 'true');
+        const reviewDone = !!(foundLesson.userSteps?.review || review === 'true' || finished === 'true');
+
+        setIsWordsCompleted(wordsDone);
+        setIsPracticeCompleted(practiceDone);
+        setIsQuizCompleted(quizDone);
+        setIsReviewCompleted(reviewDone);
       }
     } catch (error) {
       console.error('Error loading lesson data:', error);
@@ -108,7 +125,7 @@ export default function LessonDetailsScreen() {
   useFocusEffect(
     React.useCallback(() => {
       checkCompletion();
-    }, [id])
+    }, [id, userToken])
   );
 
   if (loading || !lesson) {
@@ -126,9 +143,11 @@ export default function LessonDetailsScreen() {
     { label: '4.Review', icon: 'star-outline' },
   ];
 
+  const lessonTitleText = (lesson?.displayTitle || lesson?.title || 'this lesson').toLowerCase();
+
   const contentItems = [
-    { id: 1, title: '1. Learn New Words', subtitle: `Learn vocabulary and key phrases for ${lesson.displayTitle.toLowerCase()}.`, status: isWordsCompleted ? 'Completed' : 'Start' },
-    { id: 2, title: '2. Practice', subtitle: `Practice ${lesson.displayTitle.toLowerCase()} in real conversations.`, status: isPracticeCompleted ? 'Completed' : (isWordsCompleted ? 'Start' : 'Locked') },
+    { id: 1, title: '1. Learn New Words', subtitle: `Learn vocabulary and key phrases for ${lessonTitleText}.`, status: isWordsCompleted ? 'Completed' : 'Start' },
+    { id: 2, title: '2. Practice', subtitle: `Practice ${lessonTitleText} in real conversations.`, status: isPracticeCompleted ? 'Completed' : (isWordsCompleted ? 'Start' : 'Locked') },
     { id: 3, title: '3. Quiz', subtitle: 'Test your knowledge with a quick quiz.', status: isQuizCompleted ? 'Completed' : (isPracticeCompleted ? 'Start' : 'Locked') },
     { id: 4, title: '4. Review', subtitle: 'Review what you learned in this lesson.', status: isReviewCompleted ? 'Completed' : (isQuizCompleted ? 'Start' : 'Locked') },
   ];
@@ -237,7 +256,7 @@ export default function LessonDetailsScreen() {
                     index === contentItems.length - 1 && { borderBottomWidth: 0 },
                     isLocked && { opacity: 0.6 }
                   ]}
-                  disabled={isLocked || (index === 0 && isCompleted)}
+                  disabled={isLocked || isCompleted}
                   onPress={() => {
                     if (index === 0) {
                       router.push({ pathname: '/learn-new-words', params: { lessonId: id } });
@@ -327,17 +346,21 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 4,
+    minWidth: 70,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'Nunito-Bold',
     color: PRIMARY_BLUE,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 70,
   },
   iconBtn: {
     marginRight: 10,

@@ -1,5 +1,6 @@
 const UserStreak = require('../models/UserStreak');
 const User = require('../models/User');
+const coinHelper = require('../utils/coinHelper');
 
 // Helper to format date as YYYY-MM-DD
 const formatDateString = (date) => {
@@ -281,6 +282,14 @@ const addXp = async (req, res) => {
       }
     }
     
+    let rewardsEarned = [];
+    if (user && streak.currentStreak > 0 && streak.currentStreak % 7 === 0) {
+      const streakReward = await coinHelper.awardStreakReward(user, streak.currentStreak);
+      if (streakReward) {
+        rewardsEarned.push(streakReward);
+      }
+    }
+    
     await streak.save();
     
     res.status(200).json({
@@ -292,7 +301,8 @@ const addXp = async (req, res) => {
         lastActiveDate: streak.lastActiveDate,
         weeklyProgress: streak.weeklyProgress
       },
-      goalHitToday
+      goalHitToday,
+      rewardsEarned
     });
   } catch (error) {
     console.error('Error adding XP:', error);

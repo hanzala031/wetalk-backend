@@ -154,7 +154,7 @@ export const OnboardingLanguageScreen = () => {
 
       <View style={styles.listContainer}>
         <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>What you will get!</Text>
+            <Text style={styles.sectionTitle}>Start your language journey here</Text>
             <Ionicons name="chevron-up" size={20} color="#D1D5DB" />
         </View>
 

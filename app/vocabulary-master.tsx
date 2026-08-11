@@ -1,514 +1,542 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   StatusBar,
-  Image,
   StyleSheet,
   Dimensions,
+  Animated,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import Svg, { Circle } from 'react-native-svg';
-import { useAuth } from '@/context/auth-context';
-import { useFocusEffect } from '@react-navigation/native';
-import { apiClient, authConfig, isNetworkError } from '@/lib/api-client';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { apiClient } from '@/lib/api-client';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
-// Colors
-const PRIMARY_COLOR = '#004D73'; 
-const HEADING_COLOR = '#0F172A'; 
-const BG_COLOR = '#F8FAFC';
+const NAVY = '#004D73';
+const BG = '#F5F8FF';
 const WHITE = '#FFFFFF';
-const TEXT_GRAY = '#64748B';
+const TEXT_DARK = '#0F172A';
+const TEXT_GRAY = '#6B7280';
+const LIGHT_BLUE = '#EDF4FF';
+const BORDER_COLOR = '#E2E8F0';
 
-const CircularProgress = ({ progress, total }: { progress: number; total: string }) => {
-    const size = 160;
-    const strokeWidth = 12;
-    const radius = (size - strokeWidth) / 2;
-    const circumference = radius * 2 * Math.PI;
-    const offset = circumference - (Math.min(progress, 100) / 100) * circumference;
-  
-    return (
-      <View style={styles.progressWrapper}>
-        <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="rgba(255, 255, 255, 0.1)"
-            strokeWidth={strokeWidth}
-            fill="transparent"
-          />
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={WHITE}
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${circumference} ${circumference}`}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-            fill="transparent"
-          />
-        </Svg>
-        <View style={styles.progressTextContainer}>
-            <Text style={styles.progressNumber}>{total}</Text>
-            <Text style={styles.progressSub}>Words Mastered</Text>
-        </View>
-      </View>
-    );
-};
+const VOCAB_WORDS = [
+  {
+    word: 'Ephemerality',
+    phonetic: '/ɪˌfem.əˈræl.ɪ.ti/',
+    definition: 'The state of lasting for a very short time; transience.',
+    tip: 'Try using the word "Ephemerality" as a bubble or a mnemonic relay to strengthen your memory anchor.',
+  },
+  {
+    word: 'Serendipity',
+    phonetic: '/ˌser.ənˈdɪp.ɪ.ti/',
+    definition: 'The occurrence of events by chance in a happy or beneficial way.',
+    tip: 'Picture a serene dip in the water — a happy accident that leads to joy and discovery.',
+  },
+  {
+    word: 'Mellifluous',
+    phonetic: '/məˈlɪf.lu.əs/',
+    definition: 'Sweet or musical; pleasant to hear.',
+    tip: 'Think of "mellow" + "fluent" — a voice that flows smoothly like honey.',
+  },
+  {
+    word: 'Perspicacious',
+    phonetic: '/ˌpɜː.spɪˈkeɪ.ʃəs/',
+    definition: 'Having a ready insight into things; shrewd.',
+    tip: 'Imagine someone with a "periscope" who sees through things clearly and quickly.',
+  },
+  {
+    word: 'Surreptitious',
+    phonetic: '/ˌsʌr.əpˈtɪʃ.əs/',
+    definition: 'Kept secret, especially because it would not be approved of.',
+    tip: 'Think "secret" + "reptile" — sneaking quietly like a lizard without being noticed.',
+  },
+];
 
 export default function VocabularyMaster() {
   const router = useRouter();
-  const { userToken } = useAuth();
+  const insets = useSafeAreaInsets();
+  const [words, setWords] = useState<any[]>(VOCAB_WORDS);
   const [loading, setLoading] = useState(true);
-  const [totalMastered, setTotalMastered] = useState(0);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [recentSets, setRecentSets] = useState<any[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [masteredCount, setMasteredCount] = useState(0);
+  const flipAnim = useRef(new Animated.Value(0)).current;
 
-  const fetchData = async () => {
-    try {
-      if (!userToken) return;
-      const res = await apiClient.get('/user/sync', authConfig(userToken));
-      if (res.data?.success && res.data.progressData) {
-        const p = res.data.progressData;
-        const vocabData = p.vocabulary_stats ? JSON.parse(p.vocabulary_stats) : null;
-        
-        if (vocabData) {
-          setTotalMastered(vocabData.totalMastered || 0);
-          setCategories(vocabData.categories || []);
-          setRecentSets(vocabData.recentSets || []);
-        } else {
-          setTotalMastered(0);
-          setCategories([]);
-          setRecentSets([]);
+  useEffect(() => {
+    setLoading(true);
+    apiClient.get('/practice/vocabulary')
+      .then((res) => {
+        if (res.data && res.data.success && res.data.flashcards) {
+          setWords(res.data.flashcards);
+          const initialMastered = res.data.masteredWords || [];
+          setMasteredCount(initialMastered.length);
         }
+      })
+      .catch((err) => {
+        console.error('Error fetching vocabulary:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const totalWords = words.length;
+  const doneCount = Math.min(masteredCount, totalWords);
+  const progressPct = totalWords > 0 ? Math.min((doneCount / totalWords) * 100, 100) : 0;
+
+  const currentWord = words[currentIndex] || {
+    id: 'fc_fallback',
+    word: 'Practice',
+    phonetic: '/ˈpræk.tɪs/',
+    definition: 'Perform an activity or exercise a skill repeatedly or regularly in order to acquire or maintain proficiency in it.',
+    tip: 'Practice makes perfect!'
+  };
+
+  const flipCard = () => {
+    const toValue = isFlipped ? 0 : 1;
+    Animated.spring(flipAnim, {
+      toValue,
+      friction: 8,
+      tension: 10,
+      useNativeDriver: true,
+    }).start();
+    setIsFlipped(!isFlipped);
+  };
+
+  const frontInterpolate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+  const backInterpolate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['180deg', '360deg'],
+  });
+
+  const goNext = async (action: 'mastered' | 'review') => {
+    const activeCard = words[currentIndex];
+    if (!activeCard) return;
+
+    if (action === 'mastered') {
+      try {
+        await apiClient.post('/practice/vocabulary/master', { id: activeCard.id });
+      } catch (err) {
+        console.warn('Error marking word as mastered:', err);
       }
-    } catch (error) {
-      if (!isNetworkError(error)) {
-        console.warn('Error fetching vocabulary data:', error);
+      
+      setMasteredCount(prev => Math.max(prev, currentIndex + 1));
+      
+      if (currentIndex < totalWords - 1) {
+        setCurrentIndex(i => i + 1);
+        flipAnim.setValue(0);
+        setIsFlipped(false);
+      } else {
+        setMasteredCount(totalWords);
+        Alert.alert('Congratulations!', 'You have completed all flashcards in this session!');
       }
-    } finally {
-      setLoading(false);
+    } else {
+      // Review Later -> Save card ID to user.savedWords
+      try {
+        await apiClient.post('/practice/vocabulary/save', { id: activeCard.id });
+      } catch (err) {
+        console.warn('Error saving word for review:', err);
+      }
+      
+      Alert.alert('Saved to Review', `"${activeCard.word}" will be saved for review later!`);
+      
+      if (currentIndex < totalWords - 1) {
+        setCurrentIndex(i => i + 1);
+        flipAnim.setValue(0);
+        setIsFlipped(false);
+      } else {
+        Alert.alert('Session Complete', 'You have finished reviewing the deck!');
+      }
     }
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchData();
-    }, [userToken])
-  );
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: BG }}>
+        <ActivityIndicator size="large" color={NAVY} />
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
-          <Ionicons name="arrow-back" size={24} color={HEADING_COLOR} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Vocabulary Master</Text>
-      </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={WHITE} />
 
-      <ScrollView 
-        style={styles.scrollView} 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.wordOfDayCard}>
-          <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?q=80&w=1000&auto=format&fit=crop' }} 
-            style={styles.wordOfDayImage} 
-          />
-          <View style={styles.wordOfDayContent}>
-            <Text style={styles.wordOfDayLabel}>WORD OF THE DAY</Text>
-            <View style={styles.wordRow}>
-                <Text style={styles.wordTitle}>Eloquent</Text>
-                <Text style={styles.phonetic}>/ˈel.ə.kwənt/</Text>
-            </View>
-            <Text style={styles.wordDescription}>
-              Fluent or persuasive in speaking or writing; clearly expressing or indicating something.
-            </Text>
-            <View style={styles.wordActions}>
-              <TouchableOpacity style={styles.listenBtn}>
-                <Ionicons name="volume-medium" size={20} color={WHITE} />
-                <Text style={styles.listenBtnText}>Listen</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.addBtn}>
-                <Text style={styles.addBtnText}>Add to Deck</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.masteryCard}>
-          <Text style={styles.masteryTitle}>Mastery Progress</Text>
-          <CircularProgress progress={totalMastered > 0 ? (totalMastered / 2000) * 100 : 0} total={totalMastered.toLocaleString()} />
-          <Text style={styles.masteryQuote}>
-            {"\"Your consistency is paying off. Keep building your vocabulary!\""}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Explore Categories</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAll}>View All</Text>
+      {/* Header Container with top safe area padding */}
+      <View style={{ backgroundColor: WHITE, paddingTop: insets.top || 15 }}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={20} color={NAVY} />
             </TouchableOpacity>
           </View>
-          <View style={styles.categoriesGrid}>
-            {categories.length > 0 ? categories.map((cat, i) => (
-              <TouchableOpacity key={i} style={styles.categoryCard}>
-                <View style={styles.categoryIconBg}>
-                  <Ionicons name={cat.icon as any} size={24} color={HEADING_COLOR} />
-                </View>
-                <Text style={styles.categoryName}>{cat.name}</Text>
-                <Text style={styles.categoryCount}>{cat.count}</Text>
-              </TouchableOpacity>
-            )) : (
-              <Text style={{ color: TEXT_GRAY, paddingLeft: 10 }}>No categories available.</Text>
-            )}
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">Vocabulary</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <View style={styles.progressBadge}>
+              <Text style={styles.progressBadgeText}>{doneCount}/{totalWords}</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Session Progress */}
+        <View style={styles.sessionSection}>
+          <Text style={styles.sessionLabel}>Session Progress</Text>
+          <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarFill, { width: `${progressPct}%` }]} />
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Word Sets</Text>
-          {recentSets.length > 0 ? recentSets.map((set, i) => (
-            <View key={i} style={styles.setCard}>
-                <View style={styles.setRow}>
-                    <View style={[styles.badge, { backgroundColor: set.badgeColor || '#F1F5F9' }]}>
-                        <Text style={[styles.badgeText, { color: set.badgeTextColor || '#64748B' }]}>{set.badge || 'LEVEL'}</Text>
-                    </View>
-                    <Text style={styles.setCountText}>{set.count}</Text>
-                </View>
-                <Text style={styles.setCardTitle}>{set.title}</Text>
-                <View style={styles.progressRow}>
-                    <View style={styles.progressBarBg}>
-                        <View style={[styles.progressBarFill, { width: `${set.progress || 0}%` }]} />
-                    </View>
-                </View>
-                <View style={styles.setFooter}>
-                    <View style={styles.avatarRow}>
-                        {['JD', 'AS'].map((init, j) => (
-                            <View key={j} style={[styles.avatar, { marginLeft: j === 0 ? 0 : -8 }]}>
-                                <Text style={styles.avatarText}>{init}</Text>
-                            </View>
-                        ))}
-                    </View>
-                    <TouchableOpacity style={styles.studyBtn}>
-                        <Text style={styles.studyBtnText}>Study Now</Text>
-                    </TouchableOpacity>
-                </View>
+        {/* Flashcard */}
+        <TouchableOpacity
+          style={styles.cardContainer}
+          onPress={flipCard}
+          activeOpacity={0.95}
+        >
+          {/* Front Face */}
+          <Animated.View
+            style={[
+              styles.card,
+              styles.cardFront,
+              { transform: [{ rotateY: frontInterpolate }] },
+            ]}
+          >
+            <Text style={styles.wordText}>{currentWord.word}</Text>
+            <Text style={styles.phoneticText}>{currentWord.phonetic}</Text>
+            <View style={styles.tapRow}>
+              <Ionicons name="refresh-outline" size={14} color={TEXT_GRAY} />
+              <Text style={styles.tapText}> tap to flip</Text>
             </View>
-          )) : (
-            <View style={{ alignItems: 'center', paddingVertical: 20 }}>
-                <Text style={{ color: TEXT_GRAY }}>No recent word sets found.</Text>
+          </Animated.View>
+
+          {/* Back Face */}
+          <Animated.View
+            style={[
+              styles.card,
+              styles.cardBack,
+              { transform: [{ rotateY: backInterpolate }] },
+            ]}
+          >
+            <Text style={styles.defLabel}>Definition</Text>
+            <Text style={styles.defText}>{currentWord.definition}</Text>
+            <View style={styles.tapRow}>
+              <Ionicons name="refresh-outline" size={14} color={TEXT_GRAY} />
+              <Text style={styles.tapText}> tap to flip back</Text>
             </View>
-          )}
+          </Animated.View>
+        </TouchableOpacity>
+
+        {/* Action Buttons */}
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={styles.reviewBtn}
+            onPress={() => goNext('review')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="time-outline" size={18} color={TEXT_DARK} style={{ marginRight: 6 }} />
+            <Text style={styles.reviewBtnText}>Review Later</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.masteredBtn}
+            onPress={() => goNext('mastered')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="checkmark-circle-outline" size={18} color={WHITE} style={{ marginRight: 6 }} />
+            <Text style={styles.masteredBtnText}>Mastered</Text>
+          </TouchableOpacity>
         </View>
+
+        {/* Pro Tip */}
+        <View style={styles.proTipCard}>
+          <View style={styles.proTipHeader}>
+            <MaterialCommunityIcons name="lightbulb-outline" size={18} color={NAVY} />
+            <Text style={styles.proTipTitle}>Pro Tip</Text>
+          </View>
+          <Text style={styles.proTipText}>{currentWord.tip}</Text>
+        </View>
+
+        {/* Word Dots Navigation */}
+        <View style={styles.dotsRow}>
+          {VOCAB_WORDS.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                i === currentIndex && styles.dotActive,
+                i < doneCount && styles.dotDone,
+              ]}
+            />
+          ))}
+        </View>
+
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: WHITE,
+    backgroundColor: BG,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    paddingBottom: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
     backgroundColor: WHITE,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    height: 64,
   },
-  headerBtn: {
-    padding: 4,
-    position: 'absolute',
-    left: 20,
-    top: 30,
+  headerLeft: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  headerCenter: {
+    flex: 2,
+    alignItems: 'center',
+  },
+  headerRight: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: LIGHT_BLUE,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'Nunito-Bold',
-    color: HEADING_COLOR,
+    color: NAVY,
+    textAlign: 'center',
   },
-  scrollView: {
-    flex: 1,
-    backgroundColor: BG_COLOR,
+  progressBadge: {
+    backgroundColor: LIGHT_BLUE,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C7E3FF',
+  },
+  progressBadgeText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Bold',
+    color: NAVY,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    padding: 20,
+    paddingTop: 48,
     paddingBottom: 40,
   },
-  wordOfDayCard: {
-    backgroundColor: WHITE,
-    borderRadius: 24,
-    overflow: 'hidden',
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 3,
+
+  // Session Progress
+  sessionSection: {
+    marginBottom: 28,
   },
-  wordOfDayImage: {
-    width: '100%',
-    height: 180,
-  },
-  wordOfDayContent: {
-    padding: 24,
-  },
-  wordOfDayLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: HEADING_COLOR,
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  wordRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 12,
-  },
-  wordTitle: {
-    fontSize: 22,
-    fontFamily: 'Nunito-Bold',
-    color: HEADING_COLOR,
-    marginRight: 10,
-  },
-  phonetic: {
-    fontSize: 16,
-    fontFamily: 'Nunito-Regular',
-    color: TEXT_GRAY,
-  },
-  wordDescription: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#475569',
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  wordActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  listenBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: PRIMARY_COLOR,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    gap: 8,
-  },
-  listenBtnText: {
-    color: WHITE,
-    fontFamily: 'Nunito-Bold',
-    fontSize: 14,
-  },
-  addBtn: {
-    borderWidth: 1.5,
-    borderColor: HEADING_COLOR,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-  },
-  addBtnText: {
-    color: HEADING_COLOR,
-    fontFamily: 'Nunito-Bold',
-    fontSize: 14,
-  },
-  masteryCard: {
-    backgroundColor: PRIMARY_COLOR,
-    borderRadius: 24,
-    padding: 30,
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  masteryTitle: {
-    fontSize: 20,
-    fontFamily: 'Nunito-Bold',
-    color: WHITE,
-    marginBottom: 20,
-  },
-  progressWrapper: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  progressTextContainer: {
-    position: 'absolute',
-    alignItems: 'center',
-  },
-  progressNumber: {
-    fontSize: 32,
-    fontFamily: 'Nunito-ExtraBold',
-    color: WHITE,
-  },
-  progressSub: {
-    fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: 'rgba(255, 255, 255, 0.7)',
-  },
-  masteryQuote: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: WHITE,
-    textAlign: 'center',
-    lineHeight: 22,
-    opacity: 0.9,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontFamily: 'Nunito-Bold',
-    color: HEADING_COLOR,
-    marginBottom: 20,
-  },
-  viewAll: {
-    fontSize: 14,
-    fontFamily: 'Nunito-SemiBold',
-    color: TEXT_GRAY,
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 15,
-  },
-  categoryCard: {
-    backgroundColor: WHITE,
-    borderRadius: 20,
-    padding: 20,
-    width: (width - 55) / 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 1,
-  },
-  categoryIconBg: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: BG_COLOR,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  categoryName: {
-    fontSize: 16,
-    fontFamily: 'Nunito-Bold',
-    color: HEADING_COLOR,
-    marginBottom: 4,
-  },
-  categoryCount: {
-    fontSize: 13,
-    fontFamily: 'Inter-Regular',
-    color: TEXT_GRAY,
-  },
-  setCard: {
-    backgroundColor: WHITE,
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 1,
-  },
-  setRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontFamily: 'Inter-Bold',
-  },
-  setCountText: {
+  sessionLabel: {
     fontSize: 13,
     fontFamily: 'Inter-SemiBold',
-    color: HEADING_COLOR,
-    marginBottom: 16,
-  },
-  setCardTitle: {
-    fontSize: 16,
-    fontFamily: 'Nunito-Bold',
-    color: HEADING_COLOR,
-    marginBottom: 12, 
-  },
-  progressRow: {
-    marginBottom: 24,
+    color: TEXT_GRAY,
+    marginBottom: 8,
+    letterSpacing: 0.3,
   },
   progressBarBg: {
-    height: 6,
-    backgroundColor: BG_COLOR,
-    borderRadius: 3,
+    height: 7,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 4,
+    overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: PRIMARY_COLOR,
-    borderRadius: 3,
+    backgroundColor: NAVY,
+    borderRadius: 4,
   },
-  setFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+
+  // Flashcard
+  cardContainer: {
+    width: '100%',
+    height: 240,
+    marginBottom: 24,
   },
-  avatarRow: {
-    flexDirection: 'row',
-  },
-  avatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#E2E8F0',
-    borderWidth: 2,
-    borderColor: WHITE,
+  card: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    backgroundColor: WHITE,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 30,
+    backfaceVisibility: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 5,
   },
-  avatarText: {
-    fontSize: 10,
-    fontFamily: 'Inter-Bold',
+  cardFront: {
+    backgroundColor: WHITE,
+  },
+  cardBack: {
+    backgroundColor: LIGHT_BLUE,
+  },
+  wordText: {
+    fontSize: 28,
+    fontFamily: 'Nunito-ExtraBold',
+    color: TEXT_DARK,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  phoneticText: {
+    fontSize: 15,
+    fontFamily: 'Inter-Regular',
+    color: TEXT_GRAY,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  tapRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  tapText: {
+    fontSize: 13,
+    fontFamily: 'Inter-Medium',
     color: TEXT_GRAY,
   },
-  studyBtn: {
-    backgroundColor: PRIMARY_COLOR,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+  defLabel: {
+    fontSize: 11,
+    fontFamily: 'Inter-Bold',
+    color: NAVY,
+    letterSpacing: 1,
+    marginBottom: 12,
+    textTransform: 'uppercase',
   },
-  studyBtnText: {
-    color: WHITE,
-    fontFamily: 'Nunito-Bold',
+  defText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: TEXT_DARK,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+
+  // Action Buttons
+  actionRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  reviewBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: BORDER_COLOR,
+    borderRadius: 16,
+    height: 54,
+    backgroundColor: WHITE,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  reviewBtnText: {
     fontSize: 14,
+    fontFamily: 'Nunito-Bold',
+    color: TEXT_DARK,
+  },
+  masteredBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: NAVY,
+    borderRadius: 16,
+    height: 54,
+    shadowColor: NAVY,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  masteredBtnText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Bold',
+    color: WHITE,
+  },
+
+  // Pro Tip
+  proTipCard: {
+    backgroundColor: WHITE,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  proTipHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 6,
+  },
+  proTipTitle: {
+    fontSize: 14,
+    fontFamily: 'Nunito-Bold',
+    color: NAVY,
+  },
+  proTipText: {
+    fontSize: 13,
+    fontFamily: 'Inter-Regular',
+    color: TEXT_GRAY,
+    lineHeight: 20,
+  },
+
+  // Dots
+  dotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: BORDER_COLOR,
+  },
+  dotActive: {
+    backgroundColor: NAVY,
+    width: 20,
+  },
+  dotDone: {
+    backgroundColor: '#10B981',
   },
 });

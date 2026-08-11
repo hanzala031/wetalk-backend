@@ -16,7 +16,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import lessonsData from '@/data/lessons.json';
+import { getLessonWithFallback } from '@/lib/api-client';
 
 const { width } = Dimensions.get('window');
 
@@ -29,7 +29,7 @@ const PROGRESS_BG = '#F1F5FE';
 
 export default function QuizScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
-  const { userAvatar, syncProgressToBackend } = useAuth();
+  const { userName, userAvatar, syncProgressToBackend, userToken } = useAuth();
   
   const [currentStep, setCurrentStep] = useState(0); 
   const [selectedAnswers, setSelectedAnswers] = useState<(string | null)[]>([null, null, null, null, null]);
@@ -38,12 +38,9 @@ export default function QuizScreen() {
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
-    const loadQuizData = () => {
-      const activeId = lessonId || '1';
-      const allLessons = lessonsData.lessons || [];
-      const currentLesson = allLessons.find(l => l.id === activeId);
-      
-      if (currentLesson && currentLesson.steps.quiz) {
+    const activeId = lessonId || '1';
+    getLessonWithFallback(activeId, userToken).then((currentLesson) => {
+      if (currentLesson && currentLesson.steps && currentLesson.steps.quiz) {
         const formattedQuiz = currentLesson.steps.quiz.map((q: any) => ({
           id: q.qId,
           question: q.question,
@@ -57,10 +54,8 @@ export default function QuizScreen() {
         setSelectedAnswers(new Array(formattedQuiz.length).fill(null));
       }
       setLoading(false);
-    };
-
-    loadQuizData();
-  }, [lessonId]);
+    });
+  }, [lessonId, userToken]);
 
   const handleOptionSelect = (optionId: string) => {
     const newAnswers = [...selectedAnswers];
@@ -180,7 +175,7 @@ export default function QuizScreen() {
             </TouchableOpacity>
             <View style={styles.avatarContainer}>
               <Image 
-                source={{ uri: userAvatar || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }} 
+                source={{ uri: (userAvatar && userAvatar !== 'default-avatar.png') ? userAvatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'User')}&background=004D73&color=fff` }} 
                 style={styles.avatar}
               />
             </View>
@@ -303,6 +298,8 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 4,
+    minWidth: 70,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
@@ -314,6 +311,8 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 70,
   },
   iconBtn: {
     marginRight: 10,

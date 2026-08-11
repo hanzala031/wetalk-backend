@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const coinHelper = require('../utils/coinHelper');
+const WtCoinTransaction = require('../models/WtCoinTransaction');
 
 /**
  * Get User Notifications
@@ -143,9 +145,9 @@ const formatTime = (date) => {
  */
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email, profileImage } = req.body;
+    const { name, email, profileImage, isProfileCompleted } = req.body;
 
-    const user = await User.findById(req.user.id);
+    const user = req.user;
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -159,6 +161,8 @@ exports.updateProfile = async (req, res) => {
     if (profileImage) user.profileImage = profileImage;
     if (req.body.learningGoal) user.learningGoal = req.body.learningGoal;
     if (req.body.targetLanguage) user.targetLanguage = req.body.targetLanguage;
+    if (req.body.wtCoins !== undefined) user.wtCoins = req.body.wtCoins;
+    if (isProfileCompleted !== undefined) user.isProfileCompleted = isProfileCompleted;
 
     await user.save();
 
@@ -172,6 +176,8 @@ exports.updateProfile = async (req, res) => {
         profileImage: user.profileImage,
         learningGoal: user.learningGoal,
         targetLanguage: user.targetLanguage,
+        wtCoins: user.wtCoins !== undefined ? user.wtCoins : 0,
+        isProfileCompleted: user.isProfileCompleted || false,
       },
     });
   } catch (error) {
@@ -242,7 +248,7 @@ exports.uploadImage = async (req, res) => {
  */
 exports.getProgress = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = req.user;
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -271,7 +277,7 @@ exports.getProgress = async (req, res) => {
 exports.saveProgress = async (req, res) => {
   try {
     const { progressData } = req.body;
-    const user = await User.findById(req.user.id);
+    const user = req.user;
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -281,9 +287,31 @@ exports.saveProgress = async (req, res) => {
     user.progressData = progressData;
     user.markModified('progressData');
     await user.save();
+
+    // Detect completed lessons and award rewards
+    let rewardsEarned = [];
+    if (progressData && progressData['completed_lessons']) {
+      try {
+        const raw = progressData['completed_lessons'];
+        const completedLessonsList = typeof raw === 'string' ? JSON.parse(raw).map(Number) : (Array.isArray(raw) ? raw.map(Number) : []);
+        
+        for (const lessonNum of completedLessonsList) {
+          if (!isNaN(lessonNum)) {
+            const rewards = await coinHelper.awardLessonAndModuleRewards(user, lessonNum, completedLessonsList);
+            if (rewards && rewards.length > 0) {
+              rewardsEarned.push(...rewards);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error processing rewards during sync:', err);
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Progress synced successfully',
+      rewardsEarned
     });
   } catch (error) {
     console.error('Save Progress Error:', error);
@@ -302,7 +330,7 @@ exports.saveProgress = async (req, res) => {
  */
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = req.user;
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -321,6 +349,7 @@ exports.getProfile = async (req, res) => {
         targetLanguage: user.targetLanguage,
         xp: user.xp,
         coins: user.coins,
+        wtCoins: user.wtCoins !== undefined ? user.wtCoins : 0,
         streak: user.streak,
         createdAt: user.createdAt,
       },
@@ -341,7 +370,7 @@ exports.getProfile = async (req, res) => {
  */
 exports.getSettings = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = req.user;
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -371,7 +400,7 @@ exports.getSettings = async (req, res) => {
  */
 exports.updateSettings = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = req.user;
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -421,7 +450,7 @@ exports.updateSettings = async (req, res) => {
  */
 exports.deleteAccount = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = req.user;
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
@@ -438,6 +467,92 @@ exports.deleteAccount = async (req, res) => {
       success: false,
       message: 'Server error deleting account',
       error: error.message,
+    });
+  }
+};
+
+/**
+ * Get WT Coins detail, total earned, total redeemed, and recent transactions
+ * Route: GET /api/user/wt-coins/details
+ * Access: Private
+ */
+exports.getCoinDetails = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const transactions = await WtCoinTransaction.find({ userId: user._id }).sort({ date: -1 });
+
+    let totalEarned = 0;
+    let totalRedeemed = 0;
+
+    transactions.forEach(t => {
+      if (t.coinsEarned > 0) {
+        totalEarned += t.coinsEarned;
+      } else {
+        totalRedeemed += Math.abs(t.coinsEarned);
+      }
+    });
+
+    const recentTransactions = transactions.slice(0, 10);
+
+    return res.status(200).json({
+      success: true,
+      currentBalance: user.wtCoins || 0,
+      totalEarned,
+      totalRedeemed,
+      recentTransactions
+    });
+  } catch (error) {
+    console.error('Get Coin Details Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error getting coin details',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get recent Voice/Chat Grammar Corrections
+ * Route: GET /api/user/grammar-corrections
+ * Access: Private
+ */
+exports.getGrammarCorrections = async (req, res) => {
+  try {
+    const corrections = [
+      {
+        id: 1,
+        wrong: "I go to the market yesterday.",
+        correct: "I went to the market yesterday.",
+        why: "Use Simple Past tense ('went') for completed actions in the past. 'Go' is present tense and cannot be used with 'yesterday'."
+      },
+      {
+        id: 2,
+        wrong: "The team are playing well today.",
+        correct: "The team is playing well today.",
+        why: "In American English, collective nouns like 'team' take a singular verb ('is') when acting as a single unit."
+      },
+      {
+        id: 3,
+        wrong: "She don't know the answer.",
+        correct: "She doesn't know the answer.",
+        why: "With third-person singular subjects (she/he/it), use 'doesn't' as the auxiliary verb, not 'don't'."
+      }
+    ];
+
+    return res.status(200).json({
+      success: true,
+      corrections
+    });
+  } catch (error) {
+    console.error('Get Grammar Corrections Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error getting grammar corrections',
+      error: error.message
     });
   }
 };

@@ -15,7 +15,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import { MotiView } from 'moti';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import lessonsData from '@/data/lessons.json';
+import { getLessonWithFallback } from '@/lib/api-client';
 
 const { width } = Dimensions.get('window');
 
@@ -50,7 +50,7 @@ const MovingWave = ({ active }: { active: boolean }) => {
 
 export default function SpeakYourselfScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
-  const { userAvatar, syncProgressToBackend } = useAuth();
+  const { userName, userAvatar, syncProgressToBackend, userToken } = useAuth();
   const [isRecording, setIsRecording] = useState(false);
   const [hasRecorded, setHasRecorded] = useState(false);
 
@@ -59,19 +59,19 @@ export default function SpeakYourselfScreen() {
 
   useEffect(() => {
     const activeId = lessonId || '1';
-    const allLessons = lessonsData.lessons || [];
-    const currentLesson = allLessons.find(l => l.id === activeId);
-    if (currentLesson) {
-      setLessonTitle(currentLesson.title);
-      if (currentLesson.steps.learn) {
-        const sentences = currentLesson.steps.learn
-          .map((item: any) => item.example)
-          .filter((ex: string | undefined) => !!ex)
-          .slice(0, 5);
-        setChallenges(sentences);
+    getLessonWithFallback(activeId, userToken).then((currentLesson) => {
+      if (currentLesson) {
+        setLessonTitle(currentLesson.title);
+        if (currentLesson.steps && currentLesson.steps.learn) {
+          const sentences = currentLesson.steps.learn
+            .map((item: any) => item.example)
+            .filter((ex: string | undefined) => !!ex)
+            .slice(0, 5);
+          setChallenges(sentences);
+        }
       }
-    }
-  }, [lessonId]);
+    });
+  }, [lessonId, userToken]);
 
   return (
     <View style={styles.container}>
@@ -89,7 +89,7 @@ export default function SpeakYourselfScreen() {
             </TouchableOpacity>
             <View style={styles.avatarContainer}>
               <Image 
-                source={{ uri: userAvatar || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }} 
+                source={{ uri: (userAvatar && userAvatar !== 'default-avatar.png') ? userAvatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'User')}&background=004D73&color=fff` }} 
                 style={styles.avatar}
               />
             </View>
@@ -143,7 +143,7 @@ export default function SpeakYourselfScreen() {
                    <Text style={styles.exampleText}>Example</Text>
                 </TouchableOpacity>
              </View>
-             <Text style={styles.cardSubtitle}>Practice speaking sentences about {lessonTitle.toLowerCase()}.</Text>
+             <Text style={styles.cardSubtitle}>Practice speaking sentences about {(lessonTitle || 'lesson').toLowerCase()}.</Text>
 
              <View style={styles.challengeBox}>
                 {challenges.map((line, index) => (
@@ -239,6 +239,8 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 4,
+    minWidth: 70,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
@@ -250,6 +252,8 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 70,
   },
   iconBtn: {
     marginRight: 10,

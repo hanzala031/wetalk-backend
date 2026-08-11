@@ -16,8 +16,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import lessonsData from '@/data/lessons.json';
+import { getLessonWithFallback } from '@/lib/api-client';
 
 const { width } = Dimensions.get('window');
 
@@ -52,7 +51,7 @@ const getLessonImage = (id: string | undefined) => {
 
 export default function LearnNewWordsScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
-  const { userAvatar } = useAuth();
+  const { userName, userAvatar, userToken } = useAuth();
   const [highestUnlockedIndex, setHighestUnlockedIndex] = useState(0);
   const [words, setWords] = useState<any[]>([]);
   const [lessonTitle, setLessonTitle] = useState('New Words');
@@ -70,12 +69,11 @@ export default function LearnNewWordsScreen() {
       }
 
       // Load dynamic data
-      const allLessons = lessonsData.lessons || [];
-      const currentLesson = allLessons.find(l => l.id === activeId);
-      if (currentLesson && currentLesson.steps.learn) {
+      const currentLesson = await getLessonWithFallback(activeId, userToken);
+      if (currentLesson && currentLesson.steps && currentLesson.steps.learn) {
         const formattedWords = currentLesson.steps.learn.map((w: any) => ({
           word: w.word,
-          phonetic: w.phonetic || w.meaning.substring(0, 20) + '...',
+          phonetic: w.phonetic || (w.meaning ? (w.meaning.length > 25 ? w.meaning.substring(0, 25) + '...' : w.meaning) : ''),
           example: w.example,
           icon: 'book-outline'
         }));
@@ -109,7 +107,7 @@ export default function LearnNewWordsScreen() {
             </TouchableOpacity>
             <View style={styles.avatarContainer}>
               <Image 
-                source={{ uri: userAvatar || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }} 
+                source={{ uri: (userAvatar && userAvatar !== 'default-avatar.png') ? userAvatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'User')}&background=004D73&color=fff` }} 
                 style={styles.avatar}
               />
             </View>
@@ -235,6 +233,8 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 4,
+    minWidth: 70,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
@@ -246,6 +246,8 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 70,
   },
   iconBtn: {
     marginRight: 10,

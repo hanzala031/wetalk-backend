@@ -17,8 +17,7 @@ const weeklyProgressSchema = new mongoose.Schema({
 
 const userStreakSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: mongoose.Schema.Types.Mixed,
     required: true,
     unique: true
   },
@@ -42,6 +41,6 @@ const userStreakSchema = new mongoose.Schema({
     type: [weeklyProgressSchema],
     default: []
   }
-}, { timestamps: true });
+}, { timestamps: true, bufferCommands: false });
 
 module.exports = mongoose.model('UserStreak', userStreakSchema);

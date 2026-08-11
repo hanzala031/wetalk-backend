@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, NativeModules } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
-import Voice, { SpeechResultsEvent } from '@react-native-voice/voice';
 
-const isVoiceNativeModuleAvailable = !!NativeModules.VoiceTestModule || !!NativeModules.RCTVoice;
+const isVoiceNativeModuleAvailable = false;
 
 interface SpeakStepProps {
   content: {
@@ -33,36 +32,16 @@ export const SpeakStep = ({ content, onValidate }: SpeakStepProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [spokenText, setSpokenText] = useState('');
 
-  useEffect(() => {
-    if (isVoiceNativeModuleAvailable) {
-      Voice.onSpeechResults = (e: SpeechResultsEvent) => {
-        if (e.value && e.value.length > 0) {
-          const result = e.value[0];
-          setSpokenText(result);
-          const similarity = calculateSimilarity(result, content.sentence);
-          onValidate(similarity >= 0.7);
-          setIsRecording(false);
-        }
-      };
-    }
-    return () => { if (isVoiceNativeModuleAvailable) Voice.destroy().then(Voice.removeAllListeners); };
-  }, [content.sentence]);
+
 
   const toggleRecording = async () => {
-    if (!isVoiceNativeModuleAvailable) {
-      if (isRecording) {
-        setSpokenText(content.sentence);
-        onValidate(true);
-        setIsRecording(false);
-      } else {
-        setIsRecording(true);
-      }
-      return;
+    if (isRecording) {
+      setSpokenText(content.sentence);
+      onValidate(true);
+      setIsRecording(false);
+    } else {
+      setIsRecording(true);
     }
-    try {
-      if (isRecording) { await Voice.stop(); setIsRecording(false); }
-      else { setSpokenText(''); await Voice.start('en-US'); setIsRecording(true); }
-    } catch (e) { console.error(e); setIsRecording(false); }
   };
 
   return (

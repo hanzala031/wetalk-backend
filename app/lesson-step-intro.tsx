@@ -144,8 +144,12 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 5,
+    minWidth: 50,
+    alignItems: 'flex-start',
   },
   headerTitle: {
+    flex: 1,
+    textAlign: 'center',
     fontSize: 18,
     fontFamily: 'Nunito-SemiBold',
     color: '#000000',
@@ -153,6 +157,8 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 50,
     gap: 4,
   },
   energyText: {

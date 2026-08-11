@@ -1,5 +1,12 @@
 import { OnboardingAchieveScreen } from '@/components/onboarding-achieve-screen';
+import { StatusBar } from 'react-native';
 
 export default function OnboardingAchieve() {
-  return <OnboardingAchieveScreen />;
+  return (
+    <>
+      <StatusBar barStyle="dark-content" />
+      <OnboardingAchieveScreen />
+    </>
+  );
 }
+

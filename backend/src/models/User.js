@@ -10,9 +10,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please add an email'],
     unique: true,
+    lowercase: true,
+    trim: true,
     match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please add a valid email'
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      'Please add a valid email address'
     ]
   },
   password: {
@@ -44,6 +46,18 @@ const userSchema = new mongoose.Schema({
   coins: {
     type: Number,
     default: 0
+  },
+  wtCoins: {
+    type: Number,
+    default: 0
+  },
+  streakMilestonesClaimed: {
+    type: [Number],
+    default: []
+  },
+  modulesClaimed: {
+    type: [Number],
+    default: []
   },
   streak: {
     type: Number,
@@ -77,11 +91,25 @@ const userSchema = new mongoose.Schema({
     shareProgress: { type: Boolean, default: true },
     analyticsEnabled: { type: Boolean, default: true },
   },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
+  isProfileCompleted: {
+    type: Boolean,
+    default: false
+  },
+  masteredWords: {
+    type: [String],
+    default: []
+  },
+  savedWords: {
+    type: [String],
+    default: []
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
-});
+}, { bufferCommands: false });
 
 // Encrypt password using bcrypt
 userSchema.pre('save', async function(next) {

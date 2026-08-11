@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import { cssInterop } from 'nativewind';
@@ -10,6 +10,8 @@ cssInterop(LinearGradient, {
 });
 
 const { width, height } = Dimensions.get('window');
+
+const videoSource = 'https://res.cloudinary.com/do0kkpv1f/video/upload/q_auto/f_auto/v1776495416/4201543-hd_1920_1080_30fps_y7eoga.mp4';
 
 const PaginationDots = () => (
     <View className="flex-row items-center justify-center space-x-4 mb-8">
@@ -21,17 +23,21 @@ const PaginationDots = () => (
 );
 
 export const OnboardingFullVideo = () => {
+  const player = useVideoPlayer(videoSource, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+
   return (
     <View className="flex-1 bg-white">
       {/* 1. Background Structure: Full-Screen Absolute Video */}
       <View style={StyleSheet.absoluteFill}>
-        <Video
-          source={{ uri: 'https://res.cloudinary.com/do0kkpv1f/video/upload/q_auto/f_auto/v1776495416/4201543-hd_1920_1080_30fps_y7eoga.mp4' }}
+        <VideoView
+          player={player}
           style={StyleSheet.absoluteFill}
-          resizeMode={ResizeMode.COVER}
-          shouldPlay
-          isLooping
-          isMuted
+          contentFit="cover"
+          nativeControls={false}
         />
         {/* Subtle White Overlay for legibility */}
         <View className="absolute inset-0 bg-white/20" />

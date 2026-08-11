@@ -1008,6 +1008,436 @@ const lessons = [
         correctAnswer: '4'
       }
     ]
+  },
+  // Lesson 11: Workplace & Jobs
+  {
+    lessonNumber: 11,
+    title: 'Workplace & Jobs',
+    description: 'Learn vocabulary to talk about professional careers, tasks, and typical business situations.',
+    learn: [
+      {
+        word: 'Career',
+        urduMeaning: 'ملازمت / کیریئر',
+        audioUrl: 'https://assets.wetalkapp.com/audio/career.mp3',
+        exampleSentence: 'He is planning a career in software engineering.'
+      },
+      {
+        word: 'Colleague',
+        urduMeaning: 'ساتھی ملازم / ہم کار',
+        audioUrl: 'https://assets.wetalkapp.com/audio/colleague.mp3',
+        exampleSentence: 'I discussed the new project with my colleague.'
+      },
+      {
+        word: 'Meeting',
+        urduMeaning: 'اجلاس / میٹنگ',
+        audioUrl: 'https://assets.wetalkapp.com/audio/meeting.mp3',
+        exampleSentence: 'The sales meeting starts at 9:00 AM.'
+      },
+      {
+        word: 'Manager',
+        urduMeaning: 'مینیجر / منتظم',
+        audioUrl: 'https://assets.wetalkapp.com/audio/manager.mp3',
+        exampleSentence: 'Our manager assigned us the weekly tasks.'
+      },
+      {
+        word: 'Salary',
+        urduMeaning: 'تنخواہ',
+        audioUrl: 'https://assets.wetalkapp.com/audio/salary.mp3',
+        exampleSentence: 'They offered him a competitive salary.'
+      },
+      {
+        word: 'Interview',
+        urduMeaning: 'انٹرویو / ملاقات',
+        audioUrl: 'https://assets.wetalkapp.com/audio/interview.mp3',
+        exampleSentence: 'She has a job interview tomorrow morning.'
+      }
+    ],
+    practice: {
+      listenAndRepeat: [
+        'I need to discuss the project update with my colleague.'
+      ],
+      fillInTheBlanks: [
+        {
+          question: 'The manager led the weekly ___ in the conference room.',
+          choices: ['meeting', 'salary', 'interview'],
+          correctAnswer: 'meeting'
+        }
+      ],
+      speakYourself: [
+        "You are a professional HR manager conducting a practice job interview. Ask the student 'Tell me about yourself' and 'Why do you want this job?'. Provide feedback on how to make their responses sound more professional and confident."
+      ]
+    },
+    quiz: [
+      {
+        question: 'What do we call a person we work with?',
+        options: ['Boss', 'Colleague', 'Client'],
+        correctAnswer: 'Colleague'
+      },
+      {
+        question: 'What is a job interview?',
+        options: ['A business lunch', 'A meeting to evaluate a job candidate', 'A holiday party'],
+        correctAnswer: 'A meeting to evaluate a job candidate'
+      },
+      {
+        question: 'Who is responsible for managing a team?',
+        options: ['Colleague', 'Manager', 'Intern'],
+        correctAnswer: 'Manager'
+      },
+      {
+        question: 'What is the term for a fixed regular payment for work?',
+        options: ['Bill', 'Salary', 'Discount'],
+        correctAnswer: 'Salary'
+      },
+      {
+        question: "What is a 'career'?",
+        options: ['A temporary hobby', 'A long-term profession', 'A weekend trip'],
+        correctAnswer: 'A long-term profession'
+      }
+    ]
+  },
+  // Lesson 12: Making Plans
+  {
+    lessonNumber: 12,
+    title: 'Making Plans',
+    description: 'Learn to coordinate schedules, invite others to events, and set dates.',
+    learn: [
+      {
+        word: 'Schedule',
+        urduMeaning: 'جدول / ٹائم ٹیبل',
+        audioUrl: 'https://assets.wetalkapp.com/audio/schedule.mp3',
+        exampleSentence: 'My schedule is very busy this week.'
+      },
+      {
+        word: 'Appointment',
+        urduMeaning: 'ملاقات کا وقت / اپائنٹمنٹ',
+        audioUrl: 'https://assets.wetalkapp.com/audio/appointment.mp3',
+        exampleSentence: 'I have a dentist appointment at 2 PM.'
+      },
+      {
+        word: 'Busy',
+        urduMeaning: 'مصروف',
+        audioUrl: 'https://assets.wetalkapp.com/audio/busy.mp3',
+        exampleSentence: 'Are you busy on Friday night?'
+      },
+      {
+        word: 'Free',
+        urduMeaning: 'فارغ / آزاد',
+        audioUrl: 'https://assets.wetalkapp.com/audio/free.mp3',
+        exampleSentence: "I am free this weekend. Let's hang out."
+      },
+      {
+        word: 'Invite',
+        urduMeaning: 'دعوت دینا',
+        audioUrl: 'https://assets.wetalkapp.com/audio/invite.mp3',
+        exampleSentence: 'I would like to invite you to my birthday party.'
+      },
+      {
+        word: 'Confirm',
+        urduMeaning: 'تصدیق کرنا',
+        audioUrl: 'https://assets.wetalkapp.com/audio/confirm.mp3',
+        exampleSentence: 'Please call me to confirm our meeting time.'
+      }
+    ],
+    practice: {
+      listenAndRepeat: [
+        'Are you free to meet this Saturday at five?'
+      ],
+      fillInTheBlanks: [
+        {
+          question: 'I have a dentist ___ tomorrow morning.',
+          choices: ['appointment', 'schedule', 'busy'],
+          correctAnswer: 'appointment'
+        }
+      ],
+      speakYourself: [
+        "You are a friend trying to organize a weekend trip. Propose a plan to the student (e.g. going to a movie or museum) and ask them if they are free. Negotiate the date and time, and confirm the details at the end."
+      ]
+    },
+    quiz: [
+      {
+        question: "What is a synonym for 'available'?",
+        options: ['Busy', 'Free', 'Late'],
+        correctAnswer: 'Free'
+      },
+      {
+        question: 'What do you do when you ask someone to attend your party?',
+        options: ['Invite them', 'Confirm them', 'Cancel them'],
+        correctAnswer: 'Invite them'
+      },
+      {
+        question: "What is an 'appointment'?",
+        options: ['A surprise visit', 'An arranged plan to meet at a set time', 'A business model'],
+        correctAnswer: 'An arranged plan to meet at a set time'
+      },
+      {
+        question: 'If you have a lot of things to do, you are:',
+        options: ['Free', 'Busy', 'Bored'],
+        correctAnswer: 'Busy'
+      },
+      {
+        question: "What does it mean to 'confirm' a plan?",
+        options: ['To cancel it', 'To verify it is going ahead', 'To delay it'],
+        correctAnswer: 'To verify it is going ahead'
+      }
+    ]
+  },
+  // Lesson 13: Expressing Feelings
+  {
+    lessonNumber: 13,
+    title: 'Expressing Feelings',
+    description: 'Learn to describe emotional states, express empathy, and communicate how you feel.',
+    learn: [
+      {
+        word: 'Excited',
+        urduMeaning: 'پرجوش',
+        audioUrl: 'https://assets.wetalkapp.com/audio/excited.mp3',
+        exampleSentence: 'I am so excited about starting my new job!'
+      },
+      {
+        word: 'Nervous',
+        urduMeaning: 'گھبراہٹ / نروس',
+        audioUrl: 'https://assets.wetalkapp.com/audio/nervous.mp3',
+        exampleSentence: 'I feel nervous before speaking in public.'
+      },
+      {
+        word: 'Tired',
+        urduMeaning: 'تھکا ہوا',
+        audioUrl: 'https://assets.wetalkapp.com/audio/tired.mp3',
+        exampleSentence: 'After a long workday, I feel very tired.'
+      },
+      {
+        word: 'Happy',
+        urduMeaning: 'خوش',
+        audioUrl: 'https://assets.wetalkapp.com/audio/happy.mp3',
+        exampleSentence: 'She was happy to receive the good news.'
+      },
+      {
+        word: 'Sad',
+        urduMeaning: 'دکھی / اداس',
+        audioUrl: 'https://assets.wetalkapp.com/audio/sad.mp3',
+        exampleSentence: 'He felt sad when his friend moved away.'
+      },
+      {
+        word: 'Anxious',
+        urduMeaning: 'بے چین / فکر مند',
+        audioUrl: 'https://assets.wetalkapp.com/audio/anxious.mp3',
+        exampleSentence: 'Waiting for test results makes me anxious.'
+      }
+    ],
+    practice: {
+      listenAndRepeat: [
+        'I feel a bit nervous about the interview.'
+      ],
+      fillInTheBlanks: [
+        {
+          question: 'I worked for 12 hours today, so I am very ___.',
+          choices: ['tired', 'excited', 'happy'],
+          correctAnswer: 'tired'
+        }
+      ],
+      speakYourself: [
+        "You are an empathetic friend. The student will tell you about an event that made them feel stressed, excited, or worried. Validate their feelings, offer support, and ask how they are coping."
+      ]
+    },
+    quiz: [
+      {
+        question: 'How do you feel if you are eager and looking forward to something good?',
+        options: ['Nervous', 'Excited', 'Sad'],
+        correctAnswer: 'Excited'
+      },
+      {
+        question: "What is the synonym for 'anxious'?",
+        options: ['Happy', 'Worried / Nervous', 'Calm'],
+        correctAnswer: 'Worried / Nervous'
+      },
+      {
+        question: 'If you need sleep, you are:',
+        options: ['Excited', 'Tired', 'Happy'],
+        correctAnswer: 'Tired'
+      },
+      {
+        question: "What is the opposite of 'sad'?",
+        options: ['Nervous', 'Anxious', 'Happy'],
+        correctAnswer: 'Happy'
+      },
+      {
+        question: 'How might someone feel before a big exam?',
+        options: ['Tired', 'Nervous', 'Sleepy'],
+        correctAnswer: 'Nervous'
+      }
+    ]
+  },
+  // Lesson 14: Travel & Airports
+  {
+    lessonNumber: 14,
+    title: 'Travel & Airports',
+    description: 'Learn key travel vocabulary including checking in, boarding passes, and custom processes.',
+    learn: [
+      {
+        word: 'Flight',
+        urduMeaning: 'پرواز / فلائٹ',
+        audioUrl: 'https://assets.wetalkapp.com/audio/flight.mp3',
+        exampleSentence: 'My flight to Paris departs at noon.'
+      },
+      {
+        word: 'Luggage',
+        urduMeaning: 'سامان / بیگ',
+        audioUrl: 'https://assets.wetalkapp.com/audio/luggage.mp3',
+        exampleSentence: 'Please put your luggage on the scale.'
+      },
+      {
+        word: 'Passport',
+        urduMeaning: 'پاسپورٹ',
+        audioUrl: 'https://assets.wetalkapp.com/audio/passport.mp3',
+        exampleSentence: 'You must show your passport at border control.'
+      },
+      {
+        word: 'Boarding Pass',
+        urduMeaning: 'بورڈنگ پاس',
+        audioUrl: 'https://assets.wetalkapp.com/audio/boarding_pass.mp3',
+        exampleSentence: 'Here is your boarding pass, seat 12A.'
+      },
+      {
+        word: 'Gate',
+        urduMeaning: 'گیٹ / دروازہ',
+        audioUrl: 'https://assets.wetalkapp.com/audio/gate.mp3',
+        exampleSentence: 'Flight 302 is boarding at Gate 15.'
+      },
+      {
+        word: 'Customs',
+        urduMeaning: 'کسٹمز / محصول',
+        audioUrl: 'https://assets.wetalkapp.com/audio/customs.mp3',
+        exampleSentence: 'We had to go through customs after landing.'
+      }
+    ],
+    practice: {
+      listenAndRepeat: [
+        'Here is my passport and boarding pass.'
+      ],
+      fillInTheBlanks: [
+        {
+          question: 'Please show your ___ at border security control.',
+          choices: ['passport', 'flight', 'gate'],
+          correctAnswer: 'passport'
+        }
+      ],
+      speakYourself: [
+        "You are an airport check-in agent. Ask the student for their destination, passport, and if they have any bags to check in. Give them their boarding pass and gate number, wishing them a safe flight."
+      ]
+    },
+    quiz: [
+      {
+        question: 'What document is required for international travel?',
+        options: ['Driving license', 'Passport', 'Boarding pass'],
+        correctAnswer: 'Passport'
+      },
+      {
+        question: 'Where do you board your airplane at the airport?',
+        options: ['Restroom', 'Customs', 'Gate'],
+        correctAnswer: 'Gate'
+      },
+      {
+        question: 'What is the card called that lets you board the plane?',
+        options: ['Passport', 'Ticket receipt', 'Boarding pass'],
+        correctAnswer: 'Boarding pass'
+      },
+      {
+        question: 'What do we call our suitcases and travel bags?',
+        options: ['Luggage', 'Customs', 'Gates'],
+        correctAnswer: 'Luggage'
+      },
+      {
+        question: 'Where do airport officials check incoming international goods?',
+        options: ['Restroom', 'Customs', 'Gate'],
+        correctAnswer: 'Customs'
+      }
+    ]
+  },
+  // Lesson 15: Emergency Situations
+  {
+    lessonNumber: 15,
+    title: 'Emergency Situations',
+    description: 'Learn critical vocabulary to seek help, report accidents, or communicate in emergencies.',
+    learn: [
+      {
+        word: 'Help',
+        urduMeaning: 'مدد',
+        audioUrl: 'https://assets.wetalkapp.com/audio/help.mp3',
+        exampleSentence: 'Please help me, I lost my wallet!'
+      },
+      {
+        word: 'Emergency',
+        urduMeaning: 'ہنگامی صورتحال / ایمرجنسی',
+        audioUrl: 'https://assets.wetalkapp.com/audio/emergency.mp3',
+        exampleSentence: 'In case of emergency, call 911 immediately.'
+      },
+      {
+        word: 'Police',
+        urduMeaning: 'پولیس',
+        audioUrl: 'https://assets.wetalkapp.com/audio/police.mp3',
+        exampleSentence: 'The police arrived quickly to help us.'
+      },
+      {
+        word: 'Doctor',
+        urduMeaning: 'ڈاکٹر / طبیب',
+        audioUrl: 'https://assets.wetalkapp.com/audio/doctor.mp3',
+        exampleSentence: 'I need to see a doctor right away.'
+      },
+      {
+        word: 'Hospital',
+        urduMeaning: 'اسپتال / ہسپتال',
+        audioUrl: 'https://assets.wetalkapp.com/audio/hospital.mp3',
+        exampleSentence: 'The ambulance took him to the nearest hospital.'
+      },
+      {
+        word: 'Lost',
+        urduMeaning: 'کھو گیا / گمشدہ',
+        audioUrl: 'https://assets.wetalkapp.com/audio/lost.mp3',
+        exampleSentence: 'Excuse me, I am lost. Can you help me?'
+      }
+    ],
+    practice: {
+      listenAndRepeat: [
+        'Please call an ambulance, it is an emergency!'
+      ],
+      fillInTheBlanks: [
+        {
+          question: 'Excuse me, I am ___, where is the hotel?',
+          choices: ['lost', 'hospital', 'police'],
+          correctAnswer: 'lost'
+        }
+      ],
+      speakYourself: [
+        "You are a helpful emergency dispatcher. The student will report an emergency (e.g. they are lost, have had an accident, or need a doctor). Ask clarifying questions, keep them calm, and tell them what assistance is on the way."
+      ]
+    },
+    quiz: [
+      {
+        question: 'What number do you call in a life-threatening emergency in the US?',
+        options: ['911', '411', '0'],
+        correctAnswer: '911'
+      },
+      {
+        question: 'Where should you go if you are severely injured?',
+        options: ['Hotel', 'Hospital', 'Station'],
+        correctAnswer: 'Hospital'
+      },
+      {
+        question: 'What is a practitioner of medicine called?',
+        options: ['Police', 'Doctor', 'Waiter'],
+        correctAnswer: 'Doctor'
+      },
+      {
+        question: 'What should you say if you cannot find your way?',
+        options: ['I am lost', 'Goodbye', 'Excuse me, please'],
+        correctAnswer: 'I am lost'
+      },
+      {
+        question: 'Who is responsible for civil safety and security?',
+        options: ['Doctor', 'Police', 'Clerk'],
+        correctAnswer: 'Police'
+      }
+    ]
   }
 ];
 
@@ -1023,9 +1453,9 @@ const seedDB = async () => {
     console.log('Existing lessons cleared.');
 
     // Seed lessons
-    console.log('Inserting 10 foundational lessons...');
+    console.log('Inserting 15 foundational lessons...');
     await Lesson.insertMany(lessons);
-    console.log('Database seeded successfully with 10 foundational lessons!');
+    console.log('Database seeded successfully with 15 foundational lessons!');
 
     mongoose.connection.close();
     console.log('Database connection closed.');

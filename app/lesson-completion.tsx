@@ -15,6 +15,7 @@ import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/context/auth-context';
 import { apiClient, authConfig } from '@/lib/api-client';
+import RewardPopup from '@/components/reward-popup';
 
 const { width } = Dimensions.get('window');
 const getLocalDateString = () => {
@@ -34,6 +35,8 @@ export default function LessonCompletionScreen() {
   }>();
   
   const [saving, setSaving] = useState(true);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupRewards, setPopupRewards] = useState<any[]>([]);
   const { userToken, syncProgressToBackend } = useAuth();
 
   useEffect(() => {
@@ -111,6 +114,21 @@ export default function LessonCompletionScreen() {
       await AsyncStorage.setItem('user_stats', JSON.stringify(stats));
       await syncProgressToBackend();
 
+      // Check for pending rewards
+      try {
+        const pendingStr = await AsyncStorage.getItem('pending_rewards');
+        if (pendingStr) {
+          const pending = JSON.parse(pendingStr);
+          if (Array.isArray(pending) && pending.length > 0) {
+            setPopupRewards(pending);
+            setPopupVisible(true);
+            await AsyncStorage.removeItem('pending_rewards');
+          }
+        }
+      } catch (err) {
+        console.error('Error loading pending rewards in completion screen:', err);
+      }
+
       setSaving(false);
     } catch (error) {
       console.error('Error saving local progress:', error);
@@ -181,6 +199,11 @@ export default function LessonCompletionScreen() {
           <Text style={styles.doneButtonText}>DONE</Text>
         </TouchableOpacity>
       </View>
+      <RewardPopup 
+        visible={popupVisible} 
+        rewards={popupRewards} 
+        onClose={() => setPopupVisible(false)} 
+      />
     </SafeAreaView>
   );
 }

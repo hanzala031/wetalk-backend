@@ -13,19 +13,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { MotiView, useAnimationState } from 'moti';
 import { useLanguage } from '@/context/language-context';
+import { useAuth } from '@/context/auth-context';
+import { apiClient } from '@/lib/api-client';
 
 const { width } = Dimensions.get('window');
 
-// Avatar Placeholders (using free remote images or icons)
 const AVATARS = [
-  { id: '2', uri: 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' },
-  { id: '3', uri: 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png' },
-  { id: '4', uri: 'https://cdn-icons-png.flaticon.com/512/4140/4140051.png' },
-  { id: '5', uri: 'https://cdn-icons-png.flaticon.com/512/4140/4140061.png' },
-  { id: '6', uri: 'https://cdn-icons-png.flaticon.com/512/4140/4140043.png' },
-  { id: '7', uri: 'https://cdn-icons-png.flaticon.com/512/4140/4140059.png' },
-  { id: '8', uri: 'https://cdn-icons-png.flaticon.com/512/1154/1154444.png' },
-  { id: '9', uri: 'https://cdn-icons-png.flaticon.com/512/1154/1154480.png' },
+  { id: '1', uri: 'https://api.dicebear.com/7.x/adventurer/png?seed=Felix&backgroundColor=ff5e7e&radius=50' },
+  { id: '2', uri: 'https://api.dicebear.com/7.x/adventurer/png?seed=Aneka&backgroundColor=ffd166&radius=50' },
+  { id: '3', uri: 'https://api.dicebear.com/7.x/adventurer/png?seed=Sophia&backgroundColor=e879f9&radius=50' },
+  { id: '4', uri: 'https://api.dicebear.com/7.x/adventurer/png?seed=Jack&backgroundColor=fb923c&radius=50' },
+  { id: '5', uri: 'https://api.dicebear.com/7.x/adventurer/png?seed=Lily&backgroundColor=38bdf8&radius=50' },
+  { id: '6', uri: 'https://api.dicebear.com/7.x/adventurer/png?seed=Oliver&backgroundColor=818cf8&radius=50' },
+  { id: '7', uri: 'https://api.dicebear.com/7.x/adventurer/png?seed=Zoe&backgroundColor=14b8a6&radius=50' },
+  { id: '8', uri: 'https://api.dicebear.com/7.x/adventurer/png?seed=Sadie&backgroundColor=ff8c00&radius=50' },
 ];
 
 // --- Sub-component: WeBot Mascot ---
@@ -60,19 +61,49 @@ const WeBotAvatar = ({ size = 80, eyeColor = '#38BDF8' }) => {
 
 export default function ProfileSetupScreen() {
   const { name } = useLocalSearchParams<{ name: string }>();
-  const [selectedAvatar, setSelectedAvatar] = useState('2');
+  const [selectedAvatar, setSelectedAvatar] = useState('1');
   const { t } = useLanguage();
+  const { setUserData } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const avatar = AVATARS.find(a => a.id === selectedAvatar);
-    router.replace({
-      pathname: '/welcome',
-      params: { name, avatar: avatar?.uri }
-    });
+    const avatarUri = avatar?.uri || '';
+    const cleanName = name || 'Learner';
+
+    setIsLoading(true);
+    try {
+      // 1. Send request to backend updating profile avatar (keeping isProfileCompleted: false for now)
+      await apiClient.put('/user/profile', {
+        profileImage: avatarUri,
+      });
+    } catch (err) {
+      console.warn('Failed to sync avatar choice to backend:', err);
+    } finally {
+      // 2. Update local state (keep isProfileCompleted as false)
+      await setUserData(cleanName, avatarUri, undefined, false);
+      setIsLoading(false);
+      // 3. Route to welcome (success confirmation) screen
+      router.replace({
+        pathname: '/welcome',
+        params: { name: cleanName, avatar: avatarUri }
+      });
+    }
   };
 
-  const handleSkip = () => {
-    router.replace('/(tabs)');
+  const handleSkip = async () => {
+    setIsLoading(true);
+    try {
+      await apiClient.put('/user/profile', {
+        isProfileCompleted: true
+      });
+    } catch (err) {
+      console.warn('Failed to sync skip profile status to backend:', err);
+    } finally {
+      await setUserData(name || 'Learner', '', undefined, true);
+      setIsLoading(false);
+      router.replace('/(tabs)');
+    }
   };
 
   return (
@@ -221,9 +252,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#EBF5FF',
   },
   avatarImage: {
-    width: '75%',
-    height: '75%',
-    borderRadius: 10,
+    width: '85%',
+    height: '85%',
+    borderRadius: 30,
   },
   // Bot Styles
   botBody: {

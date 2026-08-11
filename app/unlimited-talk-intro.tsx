@@ -10,7 +10,7 @@ import {
   Animated,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
@@ -26,6 +26,7 @@ const TEXT_GRAY = '#6B7280';
 export default function UnlimitedTalkIntroScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     Animated.parallel([
@@ -47,25 +48,26 @@ export default function UnlimitedTalkIntroScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={BG_COLOR} />
       
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
+      <View style={[styles.safeTop, { paddingTop: insets.top || 15 }]}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.backBtn}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="chevron-back" size={20} color={NAVY_DARK} />
-          </TouchableOpacity>
-          
-          <Text style={styles.headerTitle}>Unlimited AI Talk</Text>
-          
-          <View style={styles.premiumBadge}>
-            <Ionicons name="ribbon-outline" size={14} color={NAVY_DARK} style={{ marginRight: 4 }} />
-            <Text style={styles.premiumText}>PREMIUM</Text>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity 
+              onPress={() => router.back()} 
+              style={styles.backBtn}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="chevron-back" size={20} color={NAVY_DARK} />
+            </TouchableOpacity>
           </View>
+
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">Unlimited AI Talk</Text>
+          </View>
+
+          <View style={styles.headerRight} />
         </View>
-      </SafeAreaView>
+      </View>
 
       <ScrollView 
         style={styles.scrollView} 
@@ -99,7 +101,7 @@ export default function UnlimitedTalkIntroScreen() {
             {/* Right Content (Robot Image) */}
             <View style={styles.heroRight}>
               <Image 
-                source={{ uri: 'https://res.cloudinary.com/dgedsmawq/image/upload/v1782125323/f6da0bfc-664c-4d5a-ba05-7a53a015a014_removalai_preview_gavsvy.png' }} 
+                source={{ uri: 'https://res.cloudinary.com/dgedsmawq/image/upload/v1782210908/bg_robo_dance_sjq1hr.png' }} 
                 style={styles.robotIllustration}
                 contentFit="contain"
               />
@@ -145,7 +147,12 @@ export default function UnlimitedTalkIntroScreen() {
               <MaterialCommunityIcons name="file-document-edit-outline" size={18} color="#4B5563" />
               <Text style={styles.viewLogsText}>View Session Logs</Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+            <Ionicons 
+              name="chevron-forward" 
+              size={16} 
+              color="#9CA3AF" 
+              style={{ position: 'absolute', right: 16 }} 
+            />
           </TouchableOpacity>
 
           {/* Feature Card 1: Practice Anytime */}
@@ -195,9 +202,21 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     paddingVertical: 12,
+    height: 64,
+  },
+  headerLeft: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  headerCenter: {
+    flex: 2,
+    alignItems: 'center',
+  },
+  headerRight: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
   backBtn: {
     width: 40,
@@ -213,9 +232,10 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: 'Nunito-Bold',
     color: NAVY_DARK,
+    textAlign: 'center',
   },
   premiumBadge: {
     flexDirection: 'row',
@@ -392,10 +412,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     height: 56,
     paddingHorizontal: 16,
     marginBottom: 24,
+    position: 'relative',
   },
   viewLogsLeft: {
     flexDirection: 'row',

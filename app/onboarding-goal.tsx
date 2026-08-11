@@ -1,5 +1,12 @@
 import { OnboardingGoalScreen } from '@/components/onboarding-goal-screen';
+import { StatusBar } from 'react-native';
 
 export default function OnboardingGoal() {
-  return <OnboardingGoalScreen />;
+  return (
+    <>
+      <StatusBar barStyle="dark-content" />
+      <OnboardingGoalScreen />
+    </>
+  );
 }
+

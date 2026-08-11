@@ -1,379 +1,507 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   StatusBar,
-  Image,
   StyleSheet,
   Dimensions,
-  TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import Svg, { Circle } from 'react-native-svg';
-import { useAuth } from '@/context/auth-context';
-import { useFocusEffect } from '@react-navigation/native';
-import { apiClient, authConfig, isNetworkError } from '@/lib/api-client';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { apiClient } from '@/lib/api-client';
 
 const { width } = Dimensions.get('window');
 
-const PRIMARY_COLOR = '#004D73';
-const HEADING_COLOR = '#0F172A';
-const TEXT_GRAY = '#6B7280';
+const NAVY = '#004D73';
+const BG = '#F5F8FF';
 const WHITE = '#FFFFFF';
-const BG_COLOR = '#F8FAFC';
+const TEXT_DARK = '#0F172A';
+const TEXT_GRAY = '#6B7280';
+const LIGHT_BLUE = '#EDF4FF';
+const RED = '#EF4444';
+const GREEN = '#10B981';
+
+const CORRECTIONS = [
+  {
+    id: 1,
+    wrong: 'I go to the market yesterday.',
+    correct: 'I went to the market yesterday.',
+    why: 'Use Simple Past tense ("went") for completed actions in the past. "Go" is present tense and cannot be used with "yesterday".',
+  },
+  {
+    id: 2,
+    wrong: 'The team are playing well today.',
+    correct: 'The team is playing well today.',
+    why: 'In American English, collective nouns like "team" take a singular verb ("is"). The team acts as one unit.',
+  },
+  {
+    id: 3,
+    wrong: 'She don\'t know the answer.',
+    correct: 'She doesn\'t know the answer.',
+    why: 'With third-person singular subjects (she/he/it), use "doesn\'t" as the auxiliary verb, not "don\'t".',
+  },
+];
+
+const CONTEXTUAL_TIPS = [
+  { wrong: true,  text: 'I have never felt yesterday.' },
+  { wrong: true,  text: 'I like fish yesterday.' },
+];
+
+const STATS = [
+  { value: '12', label: 'CORRECTIONS' },
+  { value: '3',  label: 'NEW RULES' },
+  { value: '85%', label: 'ACCURACY' },
+];
 
 export default function GrammarTakeaways() {
   const router = useRouter();
-  const { userToken } = useAuth();
+  const [corrections, setCorrections] = useState<any[]>(CORRECTIONS);
   const [loading, setLoading] = useState(true);
-  const [takeaways, setTakeaways] = useState<any[]>([]);
-  const [weeklyGoal, setWeeklyGoal] = useState({ current: 0, target: 15 });
+  const [expandedId, setExpandedId] = useState<number | null>(1);
+  const insets = useSafeAreaInsets();
 
-  const fetchData = async () => {
-    try {
-      if (!userToken) return;
-      const res = await apiClient.get('/user/sync', authConfig(userToken));
-      if (res.data?.success && res.data.progressData) {
-        const p = res.data.progressData;
-        const grammarData = p.grammar_stats ? JSON.parse(p.grammar_stats) : null;
-        
-        if (grammarData) {
-          setTakeaways(grammarData.takeaways || []);
-          setWeeklyGoal(grammarData.weeklyGoal || { current: 0, target: 15 });
-        } else {
-          setTakeaways([]);
-          setWeeklyGoal({ current: 0, target: 15 });
+  useEffect(() => {
+    setLoading(true);
+    apiClient.get('/user/grammar-corrections')
+      .then((res) => {
+        if (res.data && res.data.success && res.data.corrections) {
+          setCorrections(res.data.corrections);
+          if (res.data.corrections.length > 0) {
+            setExpandedId(res.data.corrections[0].id);
+          }
         }
-      }
-    } catch (error) {
-      if (!isNetworkError(error)) {
-        console.warn('Error fetching grammar data:', error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+      })
+      .catch((err) => {
+        console.error('Error fetching grammar corrections:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchData();
-    }, [userToken])
-  );
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: BG }}>
+        <ActivityIndicator size="large" color={NAVY} />
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
-          <Ionicons name="arrow-back" size={24} color={HEADING_COLOR} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Grammar Takeaways</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={WHITE} />
+
+      {/* Header Container with top safe area padding */}
+      <View style={{ backgroundColor: WHITE, paddingTop: insets.top || 15 }}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={20} color={NAVY} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">Grammar Takeaways</Text>
+          </View>
+          <View style={styles.headerRight} />
+        </View>
       </View>
 
-      <ScrollView 
-        style={styles.scrollView} 
-        contentContainerStyle={styles.scrollContent}
+      <ScrollView
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color={TEXT_GRAY} style={styles.searchIcon} />
-          <TextInput 
-            placeholder="Search grammar topics..." 
-            style={styles.searchInput}
-            placeholderTextColor={TEXT_GRAY}
-          />
+
+        {/* Section Label */}
+        <View style={styles.sectionRow}>
+          <MaterialCommunityIcons name="text-box-check-outline" size={18} color={NAVY} />
+          <Text style={styles.sectionTitle}>Corrections from Today</Text>
         </View>
 
-        {/* Dynamic Takeaways Cards */}
-        {takeaways.length > 0 ? takeaways.map((item, index) => (
-          <View key={index} style={styles.card}>
-            {item.badge && (
-                <View style={styles.cardHeader}>
-                    <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{item.badge}</Text>
-                    </View>
-                    <MaterialCommunityIcons name={"sparkles" as any} size={20} color="#CBD5E1" />
+        {/* Correction Cards */}
+        {corrections.map((item) => {
+          const expanded = expandedId === item.id;
+          return (
+            <View key={item.id} style={styles.correctionCard}>
+              {/* SAY THIS label + sparkle */}
+              <View style={styles.correctionHeader}>
+                <View style={styles.sayThisBadge}>
+                  <Text style={styles.sayThisText}>SAY THIS</Text>
                 </View>
-            )}
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardDesc}>{item.description}</Text>
-            <View style={styles.cardFooter}>
-              <View style={styles.cardIcons}>
-                  <Ionicons name="chatbox-outline" size={18} color={TEXT_GRAY} />
-                  <Ionicons name="flash-outline" size={18} color={TEXT_GRAY} style={{ marginLeft: 8 }} />
+                <MaterialCommunityIcons name="shimmer" size={18} color="#CBD5E1" />
               </View>
-              <TouchableOpacity style={styles.reviewLessonBtn}>
-                <Text style={styles.reviewLessonText}>Review Lesson</Text>
-                <Ionicons name="arrow-forward" size={16} color={WHITE} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )) : (
-          <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-             <Text style={{ color: TEXT_GRAY }}>No grammar takeaways yet. Complete lessons to see insights here!</Text>
-          </View>
-        )}
 
-        {/* Weekly Goal Card */}
-        <View style={styles.goalCard}>
-            <View style={styles.goalProgressContainer}>
-                <Svg width={70} height={70} style={{ transform: [{ rotate: '-90deg' }] }}>
-                    <Circle
-                        cx={35}
-                        cy={35}
-                        r={30}
-                        stroke="#E2E8F0"
-                        strokeWidth={6}
-                        fill="transparent"
-                    />
-                    <Circle
-                        cx={35}
-                        cy={35}
-                        r={30}
-                        stroke={PRIMARY_COLOR}
-                        strokeWidth={6}
-                        strokeDasharray={`${2 * Math.PI * 30}`}
-                        strokeDashoffset={`${2 * Math.PI * 30 * (1 - weeklyGoal.current/weeklyGoal.target)}`}
-                        strokeLinecap="round"
-                        fill="transparent"
-                    />
-                </Svg>
-                <View style={styles.goalTextCenter}>
-                    <Text style={styles.goalRatio}>{weeklyGoal.current}/{weeklyGoal.target}</Text>
+              {/* Wrong sentence */}
+              <View style={styles.sentenceRow}>
+                <View style={[styles.sentenceDot, { backgroundColor: '#FEE2E2' }]}>
+                  <Ionicons name="close" size={12} color={RED} />
                 </View>
+                <Text style={styles.wrongText}>{item.wrong}</Text>
+              </View>
+
+              {/* Correct sentence */}
+              <View style={styles.sentenceRow}>
+                <View style={[styles.sentenceDot, { backgroundColor: '#D1FAE5' }]}>
+                  <Ionicons name="checkmark" size={12} color={GREEN} />
+                </View>
+                <Text style={styles.correctText}>{item.correct}</Text>
+              </View>
+
+              {/* Why toggle */}
+              <TouchableOpacity
+                style={styles.whyRow}
+                onPress={() => setExpandedId(expanded ? null : item.id)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.whyLabel}>Why?</Text>
+                <Ionicons
+                  name={expanded ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={NAVY}
+                />
+              </TouchableOpacity>
+
+              {expanded && (
+                <View style={styles.whyBox}>
+                  <Text style={styles.whyText}>{item.why}</Text>
+                </View>
+              )}
             </View>
-            <Text style={styles.goalTitle}>Weekly Goal</Text>
-            <Text style={styles.goalDesc}>
-                {weeklyGoal.current >= weeklyGoal.target ? "Goal reached! Excellent work." : `Review ${weeklyGoal.target - weeklyGoal.current} more rules to reach your target.`}
-            </Text>
-            <View style={styles.goalProgressBarBg}>
-                <View style={[styles.goalProgressBarFill, { width: `${(weeklyGoal.current / weeklyGoal.target) * 100}%` }]} />
+          );
+        })}
+
+        {/* Contextual Tips */}
+        <View style={styles.tipCard}>
+          <View style={styles.tipHeader}>
+            <MaterialCommunityIcons name="lightbulb-on-outline" size={18} color={NAVY} />
+            <Text style={styles.tipTitle}>Contextual Tip</Text>
+          </View>
+          <Text style={styles.tipSubtitle}>
+            Don't use Present Perfect (Simple Past) with specific time markers like "yesterday" or "last week".
+          </Text>
+
+          <View style={styles.tipExamples}>
+            {CONTEXTUAL_TIPS.map((t, i) => (
+              <View key={i} style={styles.tipExampleRow}>
+                <View style={[styles.sentenceDot, { backgroundColor: '#FEE2E2', marginTop: 2 }]}>
+                  <Ionicons name="close" size={11} color={RED} />
+                </View>
+                <Text style={styles.tipExampleText}>{t.text}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.tipTagRow}>
+            <View style={styles.tipTag}>
+              <Ionicons name="flash-outline" size={12} color={NAVY} style={{ marginRight: 4 }} />
+              <Text style={styles.tipTagText}>Present Perfect vs. Simple Past</Text>
             </View>
+          </View>
         </View>
+
+        {/* Stats Row */}
+        <View style={styles.statsCard}>
+          {STATS.map((s, i) => (
+            <View key={i} style={[styles.statItem, i < STATS.length - 1 && styles.statDivider]}>
+              <Text style={styles.statValue}>{s.value}</Text>
+              <Text style={styles.statLabel}>{s.label}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Review All Button */}
+        <TouchableOpacity style={styles.reviewAllBtn} activeOpacity={0.85}>
+          <MaterialCommunityIcons name="book-open-variant" size={18} color={WHITE} style={{ marginRight: 8 }} />
+          <Text style={styles.reviewAllText}>Review All Rules</Text>
+        </TouchableOpacity>
 
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: WHITE,
+    backgroundColor: BG,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    paddingBottom: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
     backgroundColor: WHITE,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    height: 64,
   },
-  headerBtn: {
-    padding: 4,
-    position: 'absolute',
-    left: 20,
-    top: 30,
+  headerLeft: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  headerCenter: {
+    flex: 2,
+    alignItems: 'center',
+  },
+  headerRight: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: LIGHT_BLUE,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontFamily: 'Nunito-Bold',
-    color: HEADING_COLOR,
+    color: NAVY,
+    textAlign: 'center',
   },
-  scrollView: {
-    flex: 1,
-    backgroundColor: BG_COLOR,
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: LIGHT_BLUE,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C7E3FF',
+  },
+  proBadgeText: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: NAVY,
+    letterSpacing: 0.3,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    padding: 20,
+    paddingTop: 48,
     paddingBottom: 40,
   },
-  searchContainer: {
+
+  // Section header
+  sectionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: WHITE,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 56,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  searchIcon: {
-    marginRight: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: HEADING_COLOR,
-  },
-  card: {
-    backgroundColor: WHITE,
-    borderRadius: 24,
-    padding: 24,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    gap: 8,
   },
-  cardHeader: {
+  sectionTitle: {
+    fontSize: 15,
+    fontFamily: 'Nunito-Bold',
+    color: TEXT_DARK,
+  },
+
+  // Correction Cards
+  correctionCard: {
+    backgroundColor: WHITE,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  correctionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
   },
-  badge: {
+  sayThisBadge: {
     backgroundColor: '#F1F5F9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
-  badgeText: {
-    fontSize: 12,
+  sayThisText: {
+    fontSize: 10,
     fontFamily: 'Inter-Bold',
     color: TEXT_GRAY,
+    letterSpacing: 0.8,
   },
-  cardTitle: {
-    fontSize: 20,
-    fontFamily: 'Nunito-Bold',
-    color: HEADING_COLOR,
-    marginBottom: 12,
-  },
-  cardDesc: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: '#475569',
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  cardFooter: {
+  sentenceRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 10,
   },
-  cardIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  reviewLessonBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: PRIMARY_COLOR,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12, gap: 8,
-  },
-  reviewLessonText: {
-    color: WHITE,
-    fontFamily: 'Nunito-Bold',
-    fontSize: 14,
-  },
-  outlinedBtn: {
-    borderWidth: 1.5,
-    borderColor: HEADING_COLOR,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  outlinedBtnText: {
-    color: HEADING_COLOR,
-    fontFamily: 'Nunito-Bold',
-    fontSize: 14,
-  },
-  imageCard: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    marginBottom: 16,
-    height: 220,
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-  imageCardContent: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 26, 51, 0.7)', // Overlay color to match screenshot
-    padding: 24,
-    justifyContent: 'flex-end',
-  },
-  imageCardTitle: {
-    fontSize: 20,
-    fontFamily: 'Nunito-Bold',
-    color: WHITE,
-    marginBottom: 8,
-  },
-  masteryText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Bold',
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 16,
-  },
-  practiceLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  practiceLinkText: {
-    color: WHITE,
-    fontFamily: 'Nunito-Bold',
-    fontSize: 14,
-  },
-  goalCard: {
-    backgroundColor: '#EDF4FF',
-    borderRadius: 24,
-    padding: 24,
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  goalProgressContainer: {
-    position: 'relative',
+  sentenceDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 10,
+    marginTop: 1,
+  },
+  wrongText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: RED,
+    textDecorationLine: 'line-through',
+    lineHeight: 20,
+  },
+  correctText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: GREEN,
+    lineHeight: 20,
+  },
+  whyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    gap: 6,
+  },
+  whyLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'Nunito-Bold',
+    color: NAVY,
+  },
+  whyBox: {
+    backgroundColor: LIGHT_BLUE,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 10,
+  },
+  whyText: {
+    fontSize: 13,
+    fontFamily: 'Inter-Regular',
+    color: NAVY,
+    lineHeight: 19,
+  },
+
+  // Contextual Tips Card
+  tipCard: {
+    backgroundColor: WHITE,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  goalTextCenter: {
-    position: 'absolute',
+  tipHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
   },
-  goalRatio: {
+  tipTitle: {
+    fontSize: 15,
+    fontFamily: 'Nunito-Bold',
+    color: NAVY,
+  },
+  tipSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Inter-Regular',
+    color: TEXT_GRAY,
+    lineHeight: 19,
+    marginBottom: 14,
+  },
+  tipExamples: {
+    marginBottom: 14,
+    gap: 8,
+  },
+  tipExampleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  tipExampleText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: 'Inter-Italic',
+    color: TEXT_DARK,
+    fontStyle: 'italic',
+    lineHeight: 20,
+  },
+  tipTagRow: {
+    flexDirection: 'row',
+  },
+  tipTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: LIGHT_BLUE,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C7E3FF',
+  },
+  tipTagText: {
+    fontSize: 11,
+    fontFamily: 'Inter-SemiBold',
+    color: NAVY,
+  },
+
+  // Stats
+  statsCard: {
+    flexDirection: 'row',
+    backgroundColor: WHITE,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statDivider: {
+    borderRightWidth: 1,
+    borderRightColor: '#F1F5F9',
+  },
+  statValue: {
+    fontSize: 26,
+    fontFamily: 'Nunito-ExtraBold',
+    color: TEXT_DARK,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 10,
+    fontFamily: 'Inter-Bold',
+    color: TEXT_GRAY,
+    letterSpacing: 0.8,
+  },
+
+  // Review All Button
+  reviewAllBtn: {
+    backgroundColor: NAVY,
+    borderRadius: 16,
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: NAVY,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  reviewAllText: {
+    color: WHITE,
     fontSize: 16,
     fontFamily: 'Nunito-Bold',
-    color: HEADING_COLOR,
-  },
-  goalTitle: {
-    fontSize: 18,
-    fontFamily: 'Nunito-Bold',
-    color: HEADING_COLOR,
-    marginBottom: 8,
-  },
-  goalDesc: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: '#475569',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  goalProgressBarBg: {
-    width: '100%',
-    height: 6,
-    backgroundColor: 'rgba(15, 23, 42, 0.05)',
-    borderRadius: 3,
-  },
-  goalProgressBarFill: {
-    height: '100%',
-    backgroundColor: PRIMARY_COLOR,
-    borderRadius: 3,
   },
 });

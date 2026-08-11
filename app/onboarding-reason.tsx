@@ -1,5 +1,12 @@
 import { OnboardingReasonScreen } from '@/components/onboarding-reason-screen';
+import { StatusBar } from 'react-native';
 
 export default function OnboardingReason() {
-  return <OnboardingReasonScreen />;
+  return (
+    <>
+      <StatusBar barStyle="dark-content" />
+      <OnboardingReasonScreen />
+    </>
+  );
 }
+

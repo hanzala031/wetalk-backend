@@ -17,6 +17,8 @@ import { Image } from 'expo-image';
 import { useLanguage } from '@/context/language-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useUserProgress } from '@/hooks/use-user-progress';
+import { apiClient, authConfig } from '@/lib/api-client';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getCompletedLessonsCount,
   getLearningLevel,
@@ -74,9 +76,33 @@ const CircularProgress = ({ progress = 80, size = 60, strokeWidth = 6 }) => {
 };
 
 export default function ProfileScreen() {
-  const { userName, userAvatar, userEmail } = useAuth();
+  const { userName, userAvatar, userEmail, userToken } = useAuth();
   const { t } = useLanguage();
   const { progressData, streakCount, loading } = useUserProgress();
+  const [wtCoins, setWtCoins] = useState<number>(50);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      async function loadProfileCoins() {
+        if (!userToken) return;
+        try {
+          const res = await apiClient.get('/user/profile', authConfig(userToken));
+          if (res.data?.success && res.data.user) {
+            setWtCoins(res.data.user.wtCoins || 50);
+            
+            // Sync user_stats locally
+            const statsStr = await AsyncStorage.getItem('user_stats');
+            const stats = statsStr ? JSON.parse(statsStr) : { xp: 0, coins: 0, gems: 10, streak: 0 };
+            stats.coins = res.data.user.wtCoins || 50;
+            await AsyncStorage.setItem('user_stats', JSON.stringify(stats));
+          }
+        } catch (err) {
+          console.log('Failed to fetch profile coins:', err);
+        }
+      }
+      loadProfileCoins();
+    }, [userToken])
+  );
 
   const completedLessons = getCompletedLessonsCount(progressData);
   const totalWordsLearned = getTotalWordsLearned(progressData);
@@ -121,8 +147,21 @@ export default function ProfileScreen() {
             </View>
           </View>
           <Text style={styles.userName}>{userName || 'User'}</Text>
-          <View style={styles.levelBadge}>
-            <Text style={styles.levelBadgeText}>{levelLabel}</Text>
+          <View style={styles.badgesContainer}>
+            <TouchableOpacity 
+              style={styles.coinsBadge}
+              onPress={() => router.push('/wt-coin-details')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.coinsBadgeInner}>
+                <Image 
+                  source={{ uri: 'https://res.cloudinary.com/dgedsmawq/image/upload/v1785220344/WT_Coin_udvbma.png' }}
+                  style={styles.coinImageProfile}
+                  contentFit="contain"
+                />
+                <Text style={styles.coinsBadgeText}>{wtCoins.toLocaleString()} WT Coins</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -309,9 +348,15 @@ const styles = StyleSheet.create({
     color: TEXT_PRIMARY,
     marginBottom: 8,
   },
+  badgesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
   levelBadge: {
     backgroundColor: BADGE_BG,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
@@ -319,6 +364,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Nunito-SemiBold',
     color: ACCENT_BLUE,
+  },
+  coinsBadge: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FEF3C7',
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  coinsBadgeInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  coinImageProfile: {
+    width: 24,
+    height: 24,
+    marginRight: 6,
+  },
+  coinsBadgeText: {
+    fontSize: 14,
+    fontFamily: 'Nunito-SemiBold',
+    color: '#D97706',
   },
   statsRow: {
     flexDirection: 'row',
@@ -332,6 +399,8 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 15,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -398,8 +467,8 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 14,
-    fontFamily: 'Nunito-Regular',
-    color: '#3B82F6',
+    fontFamily: 'Nunito-Bold',
+    color: '#1E3A8A',
   },
   achievementsScroll: {
     paddingLeft: 20,

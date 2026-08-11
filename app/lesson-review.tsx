@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import lessonsData from '@/data/lessons.json';
+import { getLessonWithFallback } from '@/lib/api-client';
 
 const { width } = Dimensions.get('window');
 
@@ -26,7 +26,7 @@ const TEXT_GREEN = '#2E7D32';
 
 export default function LessonReviewScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
-  const { userAvatar, syncProgressToBackend } = useAuth();
+  const { userAvatar, syncProgressToBackend, userToken } = useAuth();
 
   const [lessonTitle, setLessonTitle] = useState('Lesson');
 
@@ -53,16 +53,18 @@ export default function LessonReviewScreen() {
     markReviewCompleted();
 
     // Fetch lesson title
-    const allLessons = lessonsData.lessons || [];
-    const currentLesson = allLessons.find(l => l.id === activeLessonId);
-    if (currentLesson) {
-      setLessonTitle(currentLesson.title);
-    }
-  }, [lessonId]);
+    getLessonWithFallback(activeLessonId, userToken).then((currentLesson) => {
+      if (currentLesson && currentLesson.title) {
+        setLessonTitle(currentLesson.title);
+      }
+    });
+  }, [lessonId, userToken]);
+
+  const safeLessonTitle = (lessonTitle || 'lesson').toLowerCase();
 
   const learnedItems = [
-    { id: 1, title: '1. Learn New Words', subtitle: `Learn vocabulary and key phrases for ${lessonTitle.toLowerCase()}.`, icon: 'book-outline' },
-    { id: 2, title: '2. Practice', subtitle: `Practice ${lessonTitle.toLowerCase()} in real conversations.`, icon: 'pencil-outline' },
+    { id: 1, title: '1. Learn New Words', subtitle: `Learn vocabulary and key phrases for ${safeLessonTitle}.`, icon: 'book-outline' },
+    { id: 2, title: '2. Practice', subtitle: `Practice ${safeLessonTitle} in real conversations.`, icon: 'pencil-outline' },
     { id: 3, title: '3. Quiz', subtitle: 'Test your knowledge with a quick quiz.', icon: 'help-circle-outline' },
     { id: 4, title: '4. Review', subtitle: 'Review what you learned in this lesson.', icon: 'star-outline' },
   ];
@@ -83,7 +85,7 @@ export default function LessonReviewScreen() {
             </TouchableOpacity>
             <View style={styles.avatarContainer}>
               <Image 
-                source={{ uri: userAvatar || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }} 
+                source={{ uri: userAvatar || 'https://api.dicebear.com/7.x/adventurer/png?seed=Felix&size=128' }} 
                 style={styles.avatar}
               />
             </View>
@@ -209,17 +211,21 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 4,
+    minWidth: 70,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'Nunito-Bold',
     color: PRIMARY_BLUE,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 70,
   },
   iconBtn: {
     marginRight: 10,

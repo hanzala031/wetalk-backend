@@ -15,9 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/context/auth-context';
 import * as Speech from 'expo-speech';
-import Voice, { SpeechResultsEvent } from '@react-native-voice/voice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import lessonsData from '@/data/lessons.json';
+import { getLessonWithFallback } from '@/lib/api-client';
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +26,7 @@ const TEXT_GRAY = '#6B7280';
 const SUCCESS_GREEN = '#2E7D32';
 const ERROR_RED = '#DC2626';
 
-const isVoiceNativeModuleAvailable = !!NativeModules.VoiceTestModule || !!NativeModules.RCTVoice;
+const isVoiceNativeModuleAvailable = false;
 
 const calculateSimilarity = (s1: string, s2: string) => {
   const clean = (s: string) => s.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").trim();
@@ -43,7 +42,7 @@ const calculateSimilarity = (s1: string, s2: string) => {
 
 export default function ListenRepeatScreen() {
   const { word = 'Hello', lessonId } = useLocalSearchParams<{ word: string; lessonId: string }>();
-  const { userAvatar, syncProgressToBackend } = useAuth();
+  const { userName, userAvatar, syncProgressToBackend, userToken } = useAuth();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [spokenText, setSpokenText] = useState('');
@@ -54,45 +53,17 @@ export default function ListenRepeatScreen() {
 
   useEffect(() => {
     const activeId = lessonId || '1';
-    const allLessons = lessonsData.lessons || [];
-    const currentLesson = allLessons.find(l => l.id === activeId);
-    if (currentLesson && currentLesson.steps.practice) {
-      const practiceItem = currentLesson.steps.practice.find((p: any) => p.type === 'listen_repeat');
-      if (practiceItem && practiceItem.phrase) {
-        setTargetSentence(practiceItem.phrase);
-      }
-    }
-  }, [lessonId]);
-
-  useEffect(() => {
-    if (isVoiceNativeModuleAvailable) {
-      Voice.onSpeechResults = (e: SpeechResultsEvent) => {
-        if (e.value && e.value.length > 0) {
-          const result = e.value[0];
-          setSpokenText(result);
-          const similarity = calculateSimilarity(result, targetSentence);
-          if (similarity >= 0.7) {
-            setIsCorrect(true);
-            setFeedback('Perfect! You got it right.');
-          } else {
-            setIsCorrect(false);
-            setFeedback('Incorrect, please try again.');
-          }
-          setIsRecording(false);
+    getLessonWithFallback(activeId, userToken).then((currentLesson) => {
+      if (currentLesson && currentLesson.steps.practice) {
+        const practiceItem = currentLesson.steps.practice.find((p: any) => p.type === 'listen_repeat');
+        if (practiceItem && practiceItem.phrase) {
+          setTargetSentence(practiceItem.phrase);
         }
-      };
-      
-      Voice.onSpeechError = () => {
-        setIsRecording(false);
-        setFeedback('Error recognizing speech. Try again.');
-      };
-    }
-    return () => { 
-      if (isVoiceNativeModuleAvailable) {
-        Voice.destroy().then(Voice.removeAllListeners); 
       }
-    };
-  }, [targetSentence]);
+    });
+  }, [lessonId, userToken]);
+
+
 
   const speak = () => {
     setIsSpeaking(true);
@@ -106,32 +77,14 @@ export default function ListenRepeatScreen() {
   const toggleRecording = async () => {
     if (isCorrect) return;
 
-    if (!isVoiceNativeModuleAvailable) {
-      if (isRecording) {
-        setSpokenText(targetSentence);
-        setIsCorrect(true);
-        setFeedback('Perfect! You got it right.');
-        setIsRecording(false);
-      } else {
-        setIsRecording(true);
-        setFeedback('Listening...');
-      }
-      return;
-    }
-
-    try {
-      if (isRecording) { 
-        await Voice.stop(); 
-        setIsRecording(false); 
-      } else { 
-        setSpokenText(''); 
-        setFeedback('Listening...');
-        await Voice.start('en-US'); 
-        setIsRecording(true); 
-      }
-    } catch (e) { 
-      console.error(e); 
-      setIsRecording(false); 
+    if (isRecording) {
+      setSpokenText(targetSentence);
+      setIsCorrect(true);
+      setFeedback('Perfect! You got it right.');
+      setIsRecording(false);
+    } else {
+      setIsRecording(true);
+      setFeedback('Listening...');
     }
   };
 
@@ -158,7 +111,7 @@ export default function ListenRepeatScreen() {
             </TouchableOpacity>
             <View style={styles.avatarContainer}>
               <Image 
-                source={{ uri: userAvatar || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }} 
+                source={{ uri: (userAvatar && userAvatar !== 'default-avatar.png') ? userAvatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || 'User')}&background=004D73&color=fff` }} 
                 style={styles.avatar}
               />
             </View>
@@ -283,6 +236,8 @@ const styles = StyleSheet.create({
   },
   headerBtn: {
     padding: 4,
+    minWidth: 70,
+    alignItems: 'flex-start',
   },
   headerTitle: {
     flex: 1,
@@ -294,6 +249,8 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 70,
   },
   iconBtn: {
     marginRight: 10,

@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const userProgressSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: mongoose.Schema.Types.Mixed,
     required: true,
     unique: true
   },
@@ -38,6 +37,6 @@ const userProgressSchema = new mongoose.Schema({
     type: Date,
     default: null
   }
-}, { timestamps: true });
+}, { timestamps: true, bufferCommands: false });
 
 module.exports = mongoose.model('UserProgress', userProgressSchema);

@@ -1,11 +1,13 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, FlatList, NativeSyntheticEvent, NativeScrollEvent, StatusBar } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { MotiView } from 'moti';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
+
+const videoSource = 'https://res.cloudinary.com/do0kkpv1f/video/upload/q_auto/f_auto/v1776495416/4201543-hd_1920_1080_30fps_y7eoga.mp4';
 
 const COLORS = {
     HEADING: '#1A1A1A',
@@ -42,6 +44,12 @@ const slides: Slide[] = [
 export const OnboardingVideoScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const player = useVideoPlayer(videoSource, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+
   const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;
     const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
@@ -67,14 +75,11 @@ export const OnboardingVideoScreen = () => {
       
       {/* Background Video */}
       <View style={styles.videoWrapper}>
-        <Video
-          source={{ uri: 'https://res.cloudinary.com/do0kkpv1f/video/upload/q_auto/f_auto/v1776495416/4201543-hd_1920_1080_30fps_y7eoga.mp4' }}
+        <VideoView
+          player={player}
           style={StyleSheet.absoluteFill}
-          resizeMode={ResizeMode.COVER}
-          shouldPlay
-          isLooping
-          isMuted
-          useNativeControls={false}
+          contentFit="cover"
+          nativeControls={false}
         />
         
         <LinearGradient

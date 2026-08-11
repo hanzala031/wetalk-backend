@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/auth-context';
 import { apiClient, authConfig } from '@/lib/api-client';
 import { useLanguage } from '@/context/language-context';
+import * as SecureStore from 'expo-secure-store';
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,33 +47,28 @@ const Particle = ({ delay, color, size, top, left }: any) => (
 
 export default function WelcomeScreen() {
   const { name, avatar } = useLocalSearchParams<{ name: string; avatar: string }>();
-  const { completeOnboarding, setUserData, signIn, initializeNewUser, userToken } = useAuth();
+  const { setUserData } = useAuth();
   const { t } = useLanguage();
 
   const handleContinue = async () => {
-    // Reset everything for a fresh start
-    if (initializeNewUser) await initializeNewUser();
-
-    if (name && avatar) {
-      await setUserData(name, avatar);
-      
-      // Update backend with the selected name and avatar
-      try {
-        if (userToken) {
-          await apiClient.put('/user/profile', 
-            { name: name, profileImage: avatar },
-            authConfig(userToken)
-          );
+    // Save profile image & set isProfileCompleted: true to backend database
+    try {
+      await apiClient.put(
+        '/user/profile',
+        {
+          name: name || '',
+          profileImage: avatar || '',
+          isProfileCompleted: true
         }
-      } catch (error) {
-        console.error("Failed to update profile on backend:", error);
-      }
+      );
+    } catch (err) {
+      console.warn('Failed to update backend profile completed status:', err);
     }
-    if (completeOnboarding) await completeOnboarding();
-    
-    // Call signIn with the actual token and user object
-    await signIn(userToken || 'dummy-token', { name: name || 'User', profileImage: avatar || '' });
-    
+
+    // Update local AuthContext state to reflect completed onboarding
+    await setUserData(name || 'Learner', avatar || '', undefined, true);
+
+    // Clean navigation reset/replace to the tabs dashboard
     router.replace('/(tabs)');
   };
 
@@ -117,7 +113,7 @@ export default function WelcomeScreen() {
             <View style={styles.avatarBorder}>
               <View style={styles.avatarCircle}>
                 <Image 
-                  source={{ uri: avatar || 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png' }} 
+                  source={{ uri: avatar || 'https://api.dicebear.com/7.x/adventurer/png?seed=Felix&size=128' }} 
                   style={styles.avatarImage} 
                 />
               </View>

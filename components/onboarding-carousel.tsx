@@ -8,13 +8,15 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { MotiView, AnimatePresence } from 'moti';
 import { FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { cssInterop } from 'nativewind';
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
+
+const videoSource = 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-studying-with-headphones-43841-large.mp4';
 
 cssInterop(LinearGradient, {
   className: 'style',
@@ -179,6 +181,12 @@ export const OnboardingCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
+  const player = useVideoPlayer(videoSource, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+
   const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;
     const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
@@ -188,13 +196,11 @@ export const OnboardingCarousel = () => {
   return (
     <View className="flex-1 bg-black">
       <View className="absolute inset-0">
-        <Video
-          source={{ uri: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-light-studying-with-headphones-43841-large.mp4' }}
+        <VideoView
+          player={player}
           style={{ width: '100%', height: '100%' }}
-          resizeMode={ResizeMode.COVER}
-          shouldPlay
-          isLooping
-          isMuted
+          contentFit="cover"
+          nativeControls={false}
         />
         <LinearGradient
           colors={['rgba(224, 242, 254, 0.4)', 'rgba(255, 255, 255, 0.95)']}

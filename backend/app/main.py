@@ -45,6 +45,11 @@ def get_lan_address() -> str:
 
 @app.on_event("startup")
 async def startup_event():
+    import asyncio
+    from app.db import db
+    if db.client is None:
+        asyncio.create_task(db.connect())
+        
     port = settings.PORT
     lan_ip = get_lan_address()
     print("\n" + "="*50)

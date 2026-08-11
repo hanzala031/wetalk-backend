@@ -557,5 +557,12 @@ class DatabaseManager:
             return None
 
 db = DatabaseManager()
-# Connect immediately in background
-asyncio.create_task(db.connect())
+
+# Safe background task creation at import time
+try:
+    loop = asyncio.get_running_loop()
+    loop.create_task(db.connect())
+except RuntimeError:
+    # No running event loop (e.g. during serverless import).
+    # Connection will be initiated during FastAPI startup.
+    pass

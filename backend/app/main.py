@@ -1,10 +1,26 @@
 import socket
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, chat, lessons, streak, user, practice
 from app.config import settings
 
 app = FastAPI(title="WeTalk AI English Learning API", version="1.0.0")
+
+# Global exception handler for HTTPException to align error response format with Node.js backend
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    if isinstance(exc.detail, dict):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=exc.detail,
+            headers=exc.headers
+        )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"success": False, "message": str(exc.detail)},
+        headers=exc.headers
+    )
 
 # CORS middleware to allow mobile app client requests from LAN devices
 app.add_middleware(
